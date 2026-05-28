@@ -1,0 +1,30 @@
+{
+  "siteName": "Desde el Campo 2026",
+  "logo": {
+    "filename": "logo-Logo-B---Ramiro-mo0itxds-n20rhkwi.png",
+    "url": "/uploads/logo-Logo-B---Ramiro-mo0itxds-n20rhkwi.png",
+    "contentType": "image/png",
+    "updatedAt": 1776286015565
+  },
+  "dollarDisplayTypes": [
+    "oficial",
+    "blue",
+    "bolsa",
+    "tarjeta",
+    "mayorista",
+    "contadoconliqui",
+    "cripto"
+  ],
+  "lotes": [],
+  "banners": [
+    {
+      "id": "4d3d6d1e-c321-4d31-a340-e0f8a36ddbb7",
+      "type": "banner",
+      "destino": "https://www.youtube.com/live/uRzoVP63RiI",
+      "fileUrl": "/uploads/banner-ViajeBingo-mo0jkt50-00ctpvf3.png",
+      "fileName": "banner-ViajeBingo-mo0jkt50-00ctpvf3.png",
+      "contentType": "image/png"
+    }
+  ],
+  "noticias": []
+}

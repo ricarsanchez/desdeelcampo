@@ -1,0 +1,19 @@
+{
+  "updatedAt": "2026-04-15T00:00:00Z",
+  "dolar": [
+    {
+      "commodity": "Dolar Oficial",
+      "source": "BCRA",
+      "price": "1020",
+      "unit": "ARS",
+      "note": "Referencia oficial"
+    },
+    {
+      "commodity": "Dolar Blue",
+      "source": "Mercado informal",
+      "price": "1180",
+      "unit": "ARS",
+      "note": "Referencia paralela"
+    }
+  ]
+}
