@@ -400,7 +400,9 @@ export default async function HomePage() {
         <div className="flex flex-col lg:flex-row gap-8">
 
           {/* ── LEFT: Noticias (25%) ── */}
-          <InstagramWebhookEventsList />
+          <section className="w-full lg:w-1/4 shrink-0 space-y-5">
+            <InstagramWebhookEventsList />
+          </section>
 
           {/* ── CENTER: Marketplace (50%) ── */}
           <section className="w-full lg:flex-1">
@@ -433,9 +435,11 @@ export default async function HomePage() {
 
           {/* ── RIGHT: Sidebar (25%) ── */}
           <aside className="w-full lg:w-1/4 shrink-0 space-y-5">
-            <AdSpaceWidget />
+            {store.banners && store.banners.length > 0 && <AdSpaceWidget />}
             <MarketPrices rates={selectedDollarRates} updatedAt={marketPrices.updatedAt} />
-            <SponsorsWidget banners={store.banners} />
+            {store.banners && store.banners.length > 0 && (
+              <SponsorsWidget banners={store.banners} />
+            )}
             <QuickLinksWidget />
           </aside>
         </div>
