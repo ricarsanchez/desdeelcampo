@@ -1,7 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
-import sqlite3 from "sqlite3";
 
 export type InstagramWebhookRecord = {
   id: string;
@@ -245,18 +244,23 @@ class SqliteInstagramWebhookRepository implements InstagramWebhookRepository {
   }
 
   private openDatabase() {
-    return new Promise<sqlite3.Database>((resolve, reject) => {
-      const db = new sqlite3.Database(this.dbPath, (error) => {
-        if (error) {
-          reject(error);
-          return;
-        }
-        resolve(db);
-      });
+    return new Promise<any>((resolve, reject) => {
+      try {
+        const sqlite3 = require("sqlite3");
+        const db = new sqlite3.Database(this.dbPath, (error: any) => {
+          if (error) {
+            reject(error);
+            return;
+          }
+          resolve(db);
+        });
+      } catch (err) {
+        reject(new Error("sqlite3 module not available"));
+      }
     });
   }
 
-  private run(db: sqlite3.Database, sql: string, params: unknown[] = []) {
+  private run(db: any, sql: string, params: unknown[] = []) {
     return new Promise<void>((resolve, reject) => {
       db.run(sql, params as any[], (error) => {
         if (error) {
@@ -268,7 +272,7 @@ class SqliteInstagramWebhookRepository implements InstagramWebhookRepository {
     });
   }
 
-  private all<T>(db: sqlite3.Database, sql: string, params: unknown[] = []) {
+  private all<T>(db: any, sql: string, params: unknown[] = []) {
     return new Promise<T[]>((resolve, reject) => {
       db.all(sql, params as any[], (error, rows) => {
         if (error) {
@@ -281,7 +285,7 @@ class SqliteInstagramWebhookRepository implements InstagramWebhookRepository {
   }
 
   private async ensureColumn(
-    db: sqlite3.Database,
+    db: any,
     tableName: string,
     columnName: string,
     definition: string,
@@ -293,7 +297,7 @@ class SqliteInstagramWebhookRepository implements InstagramWebhookRepository {
     }
   }
 
-  private close(db: sqlite3.Database) {
+  private close(db: any) {
     return new Promise<void>((resolve, reject) => {
       db.close((error) => {
         if (error) {
