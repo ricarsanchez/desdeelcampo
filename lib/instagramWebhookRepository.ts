@@ -262,7 +262,7 @@ class SqliteInstagramWebhookRepository implements InstagramWebhookRepository {
 
   private run(db: any, sql: string, params: unknown[] = []) {
     return new Promise<void>((resolve, reject) => {
-      db.run(sql, params as any[], (error) => {
+      db.run(sql, params as any[], (error: any) => {
         if (error) {
           reject(error);
           return;
@@ -274,7 +274,7 @@ class SqliteInstagramWebhookRepository implements InstagramWebhookRepository {
 
   private all<T>(db: any, sql: string, params: unknown[] = []) {
     return new Promise<T[]>((resolve, reject) => {
-      db.all(sql, params as any[], (error, rows) => {
+      db.all(sql, params as any[], (error: any, rows: any) => {
         if (error) {
           reject(error);
           return;
@@ -299,7 +299,7 @@ class SqliteInstagramWebhookRepository implements InstagramWebhookRepository {
 
   private close(db: any) {
     return new Promise<void>((resolve, reject) => {
-      db.close((error) => {
+      db.close((error: any) => {
         if (error) {
           reject(error);
           return;
