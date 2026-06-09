@@ -1,7 +1,5 @@
 const VERIFY_TOKEN = "desdeelcampo2026";
 
-import { createClient } from "@supabase/supabase-js";
-
 export default async function handler(req, res) {
   if (req.method === 'GET') {
     const verify_token = req.query['hub.verify_token'] || req.query['hub.verify-token'] || req.query.verify_token;
@@ -26,8 +24,6 @@ export default async function handler(req, res) {
 
     if (SUPABASE_URL && SUPABASE_KEY) {
       try {
-        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
         const records = [];
         if (body && Array.isArray(body.entry)) {
           for (const entry of body.entry) {
