@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSupabaseServer } from "../../../_utils/supabaseServer";
 
+export const runtime = "nodejs";
+
 type InstagramPostRow = {
   media_id: string;
   caption: string | null;
@@ -21,6 +23,9 @@ export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const limit = parsePositiveInt(searchParams.get("limit"), 20, 100);
   const offset = parsePositiveInt(searchParams.get("offset"), 0, 10_000);
+
+  console.log("SUPABASE_URL =", process.env.SUPABASE_URL);
+  console.log("SERVICE_ROLE_KEY exists =", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const supabase = getSupabaseServer();
   if (!supabase) {

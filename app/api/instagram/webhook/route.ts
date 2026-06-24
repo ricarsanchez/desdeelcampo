@@ -6,6 +6,8 @@ import {
 } from "../../_utils/instagramWebhook";
 import { getSupabaseServer } from "../../_utils/supabaseServer";
 
+export const runtime = "nodejs";
+
 const DEFAULT_VERIFY_TOKEN = "desdeelcampo2026";
 
 export async function GET(request: Request) {
@@ -45,6 +47,9 @@ export async function POST(request: Request) {
     if (records.length === 0) {
       return NextResponse.json({ ok: true, inserted: 0 });
     }
+
+    console.log("SUPABASE_URL =", process.env.SUPABASE_URL);
+    console.log("SERVICE_ROLE_KEY exists =", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     const supabase = getSupabaseServer();
     if (!supabase) {
