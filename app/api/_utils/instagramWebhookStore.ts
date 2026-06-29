@@ -1,3 +1,4 @@
+/** @deprecated El webhook ahora escribe directamente en Supabase (instagram_posts). Este archivo se eliminará en la etapa de limpieza. */
 import { createId, readStoreData, writeStoreData } from "./store";
 import type { InstagramWebhookPost } from "./store";
 

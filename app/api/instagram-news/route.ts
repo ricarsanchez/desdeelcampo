@@ -69,7 +69,7 @@ export async function GET(request: Request) {
       ok: true,
       posts: [],
       source: "fallback",
-      note: "Configura INSTAGRAM_ACCESS_TOKEN e INSTAGRAM_USER_ID para habilitar la sincronización automática.",
+      note: "Configura INSTAGRAM_ACCESS_TOKEN e INSTAGRAM_BUSINESS_ACCOUNT_ID para habilitar la sincronización automática.",
     },
     {
       headers: {

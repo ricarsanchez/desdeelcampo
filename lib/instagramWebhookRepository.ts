@@ -1,3 +1,4 @@
+/** @deprecated Los eventos ahora se leen desde Supabase (instagram_posts). Este archivo se eliminará en la etapa de limpieza. */
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";

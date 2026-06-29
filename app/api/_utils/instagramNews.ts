@@ -86,9 +86,11 @@ export async function writeInstagramNewsCache(data: InstagramNewsCache) {
 
 export async function fetchInstagramPostsFromApi(): Promise<InstagramPost[] | null> {
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
-  const userId = process.env.INSTAGRAM_USER_ID;
+  const businessAccountId =
+    process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID ||
+    process.env.INSTAGRAM_BUSINESSS_ACCOUNT_ID; // DEPRECATED: typo, remove after migration
 
-  if (!token || !userId) {
+  if (!token || !businessAccountId) {
     return null;
   }
 
@@ -103,8 +105,8 @@ export async function fetchInstagramPostsFromApi(): Promise<InstagramPost[] | nu
     "like_count",
   ].join(",");
 
-  const endpoint = `https://graph.instagram.com/${encodeURIComponent(
-    userId,
+  const endpoint = `https://graph.facebook.com/v22.0/${encodeURIComponent(
+    businessAccountId,
   )}/media?fields=${encodeURIComponent(fields)}&access_token=${encodeURIComponent(token)}`;
 
   try {

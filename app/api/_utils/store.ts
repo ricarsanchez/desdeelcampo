@@ -21,6 +21,7 @@ export type NewsArticle = {
   imageUrl?: string;
 };
 
+/** @deprecated El webhook ahora escribe directamente en Supabase. Este tipo se eliminará en la etapa de limpieza. */
 export type InstagramWebhookPost = {
   id: string;
   caption: string;
@@ -76,6 +77,7 @@ export type StoreData = {
   lotes: Lote[];
   banners: AdAsset[];
   noticias: NewsArticle[];
+  /** @deprecated Eliminar en etapa de limpieza junto con InstagramWebhookPost. */
   instagramWebhookPosts: InstagramWebhookPost[];
 };
 
