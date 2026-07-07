@@ -16,11 +16,11 @@ function getSupabaseConfig() {
     process.env.SUPABASE_KEY;
 
   if (!url) {
-    console.log("getSupabaseConfig: falta URL");
+    console.log("getSupabaseConfig: if (!url || !key) -> falta URL");
     return null;
   }
   if (!key) {
-    console.log("getSupabaseConfig: falta KEY");
+    console.log("getSupabaseConfig: if (!url || !key) -> falta KEY");
     return null;
   }
 
@@ -31,10 +31,11 @@ function getSupabaseConfig() {
       return null;
     }
   } catch {
-    console.log("getSupabaseConfig: URL inválida (no se pudo parsear)");
+    console.log("getSupabaseConfig: new URL(url) falló");
     return null;
   }
 
+  console.log("Supabase config OK");
   return { url, key };
 }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServer } from "../../_utils/supabaseServer";
+import { getSupabaseServer, isSupabaseConfigured } from "../../_utils/supabaseServer";
 
 export const runtime = "nodejs";
 
@@ -103,6 +103,7 @@ export async function GET() {
     const records = mapMediaToRecords(mediaItems);
 
     const supabase = getSupabaseServer();
+    console.log("isSupabaseConfigured:", isSupabaseConfigured());
     if (!supabase) {
       return NextResponse.json(
         { ok: false, error: "Supabase no configurado.", upserted: 0 },
