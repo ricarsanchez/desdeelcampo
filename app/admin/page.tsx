@@ -6,9 +6,10 @@ import { LotesForm } from "../../components/admin/LotesForm";
 import { NewsManagementForm } from "../../components/admin/NewsManagementForm";
 import PriceManagementForm from "../../components/admin/PriceManagementForm";
 import { PublicidadForm } from "../../components/admin/PublicidadForm";
+import { InstagramSyncCard } from "../../components/admin/InstagramSyncCard";
 import type { NewsArticle } from "../../lib/news";
 
-type TabKey = "lotes" | "publicidad" | "noticias" | "precios";
+type TabKey = "lotes" | "publicidad" | "noticias" | "precios" | "instagram";
 
 type MarketPriceItem = {
   id: string;
@@ -521,6 +522,8 @@ export default function AdminPage() {
                 )}
               </AdminSection>
             )}
+
+            {tab === "instagram" && <InstagramSyncCard />}
 
             {preview && (
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">

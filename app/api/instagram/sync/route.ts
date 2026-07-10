@@ -87,7 +87,7 @@ async function fetchInstagramMedia(): Promise<InstagramMediaItem[]> {
   return Array.isArray(payload.data) ? payload.data : [];
 }
 
-export async function GET() {
+async function runSync() {
   try {
     const mediaItems = await fetchInstagramMedia();
 
@@ -126,6 +126,12 @@ export async function GET() {
       );
     }
 
+    await supabase
+      .from("instagram_sync_status")
+      .upsert({ id: 1, last_synced_at: new Date().toISOString() })
+      .select()
+      .maybeSingle();
+
     return NextResponse.json({ ok: true, upserted: records.length });
   } catch (error) {
     console.error("Instagram sync: error no controlado.", {
@@ -137,3 +143,5 @@ export async function GET() {
     );
   }
 }
+
+export { runSync as GET, runSync as POST };

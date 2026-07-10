@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 
-type TabKey = "lotes" | "publicidad" | "noticias" | "precios";
+type TabKey = "lotes" | "publicidad" | "noticias" | "precios" | "instagram";
 
 type AdminShellProps = {
   tab: TabKey;
@@ -139,6 +139,18 @@ export function AdminShell({ tab, setTab, preview, setPreview, children }: Admin
                   }
                 >
                   Gestión de Precios
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTab("instagram")}
+                  className={
+                    "w-full rounded-xl px-3 py-2 text-left text-sm font-medium transition " +
+                    (tab === "instagram"
+                      ? "bg-emerald-50 text-emerald-800 ring-1 ring-emerald-200"
+                      : "text-slate-700 hover:bg-slate-50")
+                  }
+                >
+                  Instagram
                 </button>
               </nav>
 

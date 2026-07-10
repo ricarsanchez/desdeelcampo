@@ -15,7 +15,7 @@ type NewsDraft = {
 const emptyDraft: NewsDraft = { title: "", content: "", date: "" };
 
 export default function NoticiasAdminPage() {
-  const [tab, setTab] = useState<"lotes" | "publicidad" | "noticias" | "precios">("noticias");
+  const [tab, setTab] = useState<"lotes" | "publicidad" | "noticias" | "precios" | "instagram">("noticias");
   const [preview, setPreview] = useState(false);
 
   const [news, setNews] = useState<NewsArticle[]>([]);
