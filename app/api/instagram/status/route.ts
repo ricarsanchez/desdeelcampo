@@ -19,9 +19,17 @@ async function getTokenExpiration(token: string): Promise<number | null> {
     const response = await fetch(endpoint, { cache: "no-store" });
     if (!response.ok) return null;
     const payload = (await response.json()) as {
-      data?: { expires_at?: number; is_valid?: boolean };
+      data?: {
+        expires_at?: number;
+        data_access_expires_at?: number;
+        is_valid?: boolean;
+      };
     };
-    const expiresAt = payload.data?.expires_at;
+    const data = payload.data;
+    let expiresAt = data?.expires_at;
+    if (!expiresAt || expiresAt === 0) {
+      expiresAt = data?.data_access_expires_at;
+    }
     if (!expiresAt || expiresAt === 0) return null;
     const now = Math.floor(Date.now() / 1000);
     return Math.max(0, Math.ceil((expiresAt - now) / 86400));
