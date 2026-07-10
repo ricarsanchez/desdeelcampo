@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSupabaseServer, isSupabaseConfigured } from "../../_utils/supabaseServer";
+import { getSupabaseServer } from "../../_utils/supabaseServer";
 
 export const runtime = "nodejs";
 
@@ -54,8 +54,7 @@ function mapMediaToRecords(items: InstagramMediaItem[]): InstagramWebhookRecord[
 async function fetchInstagramMedia(): Promise<InstagramMediaItem[]> {
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
   const businessAccountId =
-    process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID ||
-    process.env.INSTAGRAM_BUSINESSS_ACCOUNT_ID;
+    process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
 
   if (!token || !businessAccountId) {
     return [];
@@ -103,7 +102,6 @@ export async function GET() {
     const records = mapMediaToRecords(mediaItems);
 
     const supabase = getSupabaseServer();
-    console.log("isSupabaseConfigured:", isSupabaseConfigured());
     if (!supabase) {
       return NextResponse.json(
         { ok: false, error: "Supabase no configurado.", upserted: 0 },

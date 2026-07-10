@@ -37,7 +37,6 @@ export async function POST(request: Request) {
     const signature = request.headers.get("x-hub-signature-256");
 
     if (isInstagramWebhookSignatureRequired() && !verifyInstagramWebhookSignature(rawBody, signature)) {
-      console.warn("Instagram webhook: firma inválida o ausente.");
       return NextResponse.json({ ok: false, error: "Firma inválida." }, { status: 403 });
     }
 
@@ -48,12 +47,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ ok: true, inserted: 0 });
     }
 
-    console.log("SUPABASE_URL =", process.env.SUPABASE_URL);
-    console.log("SERVICE_ROLE_KEY exists =", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-
     const supabase = getSupabaseServer();
     if (!supabase) {
-      console.warn("Instagram webhook: Supabase no configurado; no se guardaron eventos.");
       return NextResponse.json({ ok: true, inserted: 0, warning: "Supabase no configurado." });
     }
 

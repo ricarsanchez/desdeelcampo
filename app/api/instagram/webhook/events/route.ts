@@ -24,9 +24,6 @@ export async function GET(request: Request) {
   const limit = parsePositiveInt(searchParams.get("limit"), 20, 100);
   const offset = parsePositiveInt(searchParams.get("offset"), 0, 10_000);
 
-  console.log("SUPABASE_URL =", process.env.SUPABASE_URL);
-  console.log("SERVICE_ROLE_KEY exists =", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-
   const supabase = getSupabaseServer();
   if (!supabase) {
     return NextResponse.json(

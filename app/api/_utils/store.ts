@@ -21,17 +21,6 @@ export type NewsArticle = {
   imageUrl?: string;
 };
 
-/** @deprecated El webhook ahora escribe directamente en Supabase. Este tipo se eliminará en la etapa de limpieza. */
-export type InstagramWebhookPost = {
-  id: string;
-  caption: string;
-  media_url: string;
-  permalink: string;
-  instagramMediaId: string;
-  instagramUserId?: string;
-  receivedAt: string;
-};
-
 export type Lote = {
   id: string;
   titulo: string;
@@ -77,8 +66,6 @@ export type StoreData = {
   lotes: Lote[];
   banners: AdAsset[];
   noticias: NewsArticle[];
-  /** @deprecated Eliminar en etapa de limpieza junto con InstagramWebhookPost. */
-  instagramWebhookPosts: InstagramWebhookPost[];
 };
 
 const dataDirAbsolute = path.join(process.cwd(), "data");
@@ -98,7 +85,6 @@ export async function readStoreData(): Promise<StoreData> {
       lotes: data.lotes ?? [],
       banners: data.banners ?? [],
       noticias: data.noticias ?? [],
-      instagramWebhookPosts: data.instagramWebhookPosts ?? [],
       siteName: data.siteName ?? "Desde el Campo 2026",
       logo: data.logo ?? null,
     };
@@ -110,7 +96,6 @@ export async function readStoreData(): Promise<StoreData> {
       lotes: [],
       banners: [],
       noticias: [],
-      instagramWebhookPosts: [],
     };
   }
 }
