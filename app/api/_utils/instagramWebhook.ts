@@ -6,6 +6,7 @@ export type InstagramWebhookRecord = {
   media_url: string | null;
   permalink: string | null;
   created_at: string;
+  media_type: string | null;
 };
 
 type WebhookBody = {
@@ -85,6 +86,7 @@ export function normalizeInstagramWebhookRecords(body: WebhookBody): InstagramWe
           toIsoTimestamp(value.created_time) ??
           toIsoTimestamp(value.created_at) ??
           new Date().toISOString(),
+        media_type: extractString(value.media_type),
       });
     }
   }

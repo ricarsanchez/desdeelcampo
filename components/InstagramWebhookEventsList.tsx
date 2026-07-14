@@ -1,167 +1,177 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ChevronLeft, ChevronRight, ExternalLink, Images, Instagram, Play, RefreshCw } from "lucide-react";
+import { useState } from "react";
 import { useInstagramWebhookEvents } from "../hooks/useInstagramWebhookEvents";
-
-const PAGE_SIZE_STORAGE_KEY = "instagramEventsPageSize";
-const ALLOWED_PAGE_SIZES = [10, 20, 50] as const;
 
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString("es-AR");
+  return date.toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" });
 }
 
+function truncateCaption(text: string | null, maxLength = 120) {
+  if (!text) return null;
+  if (text.length <= maxLength) return text;
+  return text.slice(0, maxLength).replace(/\s+\S*$/, "") + "…";
+}
+
+const PAGE_SIZE = 8;
+
 export default function InstagramWebhookEventsList() {
-  const [pageSize, setPageSize] = useState(20);
   const [page, setPage] = useState(0);
-  const offset = page * pageSize;
-  const { events, total, isLoading, error, refetch } = useInstagramWebhookEvents({ limit: pageSize, offset });
+  const offset = page * PAGE_SIZE;
+  const { events, total, isLoading, error, refetch } = useInstagramWebhookEvents({
+    limit: PAGE_SIZE,
+    offset,
+  });
 
-  useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(PAGE_SIZE_STORAGE_KEY);
-      if (!saved) return;
-
-      const parsed = Number.parseInt(saved, 10);
-      if (ALLOWED_PAGE_SIZES.includes(parsed as (typeof ALLOWED_PAGE_SIZES)[number])) {
-        setPageSize(parsed);
-      }
-    } catch {
-      // Ignora errores de acceso a storage en navegadores restringidos.
-    }
-  }, []);
-
-  const hasPreviousPage = page > 0;
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const hasNextPage = page + 1 < totalPages;
 
   function goPrevious() {
-    if (page > 0) {
-      setPage((current) => Math.max(0, current - 1));
-    }
+    if (page > 0) setPage((current) => current - 1);
   }
 
   function goNext() {
-    if (page + 1 < totalPages) {
-      setPage((current) => current + 1);
-    }
-  }
-
-  function handlePageSizeChange(value: number) {
-    setPageSize(value);
-    setPage(0);
-    try {
-      window.localStorage.setItem(PAGE_SIZE_STORAGE_KEY, String(value));
-    } catch {
-      // Ignora errores de acceso a storage en navegadores restringidos.
-    }
+    if (page + 1 < totalPages) setPage((current) => current + 1);
   }
 
   return (
-    <section className="rounded-2xl border border-stone-200 bg-white p-4 sm:p-6 shadow-sm">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-lg font-bold text-stone-900">Publicaciones de Instagram</h2>
-          <p className="text-sm text-stone-500">
-            Eventos recibidos desde el webhook. Página {page + 1} de {totalPages}.
-          </p>
-        </div>
+    <section className="rounded-2xl border border-stone-200 bg-white shadow-sm overflow-hidden">
+      <header className="flex items-center gap-2 px-5 py-4 border-b border-stone-100">
         <div className="flex items-center gap-2">
-          <label className="flex items-center gap-2 rounded-lg border border-stone-300 px-3 py-1.5 text-sm text-stone-700">
-            <span className="text-stone-500">Por página</span>
-            <select
-              value={pageSize}
-              onChange={(event) => handlePageSizeChange(Number(event.target.value))}
-              className="bg-transparent outline-none"
-            >
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-            </select>
-          </label>
-          <button
-            type="button"
-            onClick={goPrevious}
-            disabled={!hasPreviousPage || isLoading}
-            className="inline-flex items-center gap-1 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Anterior
-          </button>
-          <button
-            type="button"
-            onClick={goNext}
-            disabled={!hasNextPage || isLoading}
-            className="inline-flex items-center gap-1 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            Siguiente
-            <ChevronRight className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 hover:bg-stone-50"
-          >
-            Recargar
-          </button>
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 text-white">
+            <Instagram className="h-4 w-4" />
+          </span>
+          <div>
+            <h2 className="text-sm font-bold text-stone-800">Instagram</h2>
+            <p className="text-xs text-stone-400">{total} publicaciones</p>
+          </div>
         </div>
+        <button
+          type="button"
+          onClick={() => void refetch()}
+          disabled={isLoading}
+          className="ml-auto rounded-lg p-1.5 text-stone-400 hover:bg-stone-100 hover:text-stone-600 disabled:opacity-50 transition-colors"
+          title="Recargar"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+        </button>
+      </header>
+
+      <div className="p-4">
+        {isLoading && (
+          <div className="grid grid-cols-2 gap-3 animate-pulse">
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <div key={i} className="rounded-xl border border-stone-200 overflow-hidden">
+                <div className="aspect-square bg-stone-200" />
+                <div className="p-3 space-y-2">
+                  <div className="h-3 bg-stone-200 rounded w-full" />
+                  <div className="h-3 bg-stone-200 rounded w-2/3" />
+                  <div className="h-2 bg-stone-100 rounded w-1/2 mt-1" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!isLoading && error && (
+          <p className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</p>
+        )}
+
+        {!isLoading && !error && events.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-10 text-center">
+            <Instagram className="h-10 w-10 text-stone-300 mb-3" />
+            <p className="text-sm text-stone-500">Todavia no hay publicaciones.</p>
+            <p className="text-xs text-stone-400 mt-1">Las novedades de Instagram apareceran aca.</p>
+          </div>
+        )}
+
+        {!isLoading && !error && events.length > 0 && (
+          <div className="grid grid-cols-2 gap-3">
+            {events.map((event) => (
+              <a
+                key={`${event.media_id}-${event.created_at}`}
+                href={event.permalink ?? "#"}
+                target={event.permalink ? "_blank" : undefined}
+                rel={event.permalink ? "noopener noreferrer" : undefined}
+                className={`group relative block rounded-xl border border-stone-200 bg-white overflow-hidden transition-all duration-300 ease-out hover:scale-105 hover:shadow-xl hover:border-pink-200 hover:z-10 ${
+                  !event.permalink ? "pointer-events-none" : ""
+                }`}
+              >
+                <div className="aspect-square bg-stone-100 overflow-hidden">
+                  {event.media_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={event.media_url}
+                      alt={event.caption ?? "Publicacion de Instagram"}
+                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-110"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-stone-300">
+                      <Instagram className="h-8 w-8" />
+                    </div>
+                  )}
+                  <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {event.media_type === "CAROUSEL_ALBUM" && (
+                    <span className="pointer-events-none absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded bg-black/40 text-white backdrop-blur-sm">
+                      <Images className="h-3 w-3" />
+                    </span>
+                  )}
+                  {event.media_type === "VIDEO" && (
+                    <span className="pointer-events-none absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded bg-black/40 text-white backdrop-blur-sm pl-px">
+                      <Play className="h-3 w-3" />
+                    </span>
+                  )}
+                </div>
+                <div className="p-3">
+                  {event.caption && (
+                    <div className="min-h-[5rem]">
+                      <p className="text-xs leading-relaxed text-stone-700 line-clamp-2 group-hover:line-clamp-4 transition-all duration-300">
+                        {truncateCaption(event.caption)}
+                      </p>
+                    </div>
+                  )}
+                  <div className="mt-2 flex items-end justify-between gap-2">
+                    <p className="text-[10px] text-stone-400">{formatDate(event.created_at)}</p>
+                    <span className="inline-flex shrink-0 items-center gap-0.5 text-[10px] font-medium text-pink-600 opacity-0 translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                      Ver publicación
+                      <ExternalLink className="h-3 w-3" />
+                    </span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
       </div>
 
-      {isLoading && <p className="text-sm text-stone-500">Cargando publicaciones...</p>}
-
-      {!isLoading && error && (
-        <p className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</p>
-      )}
-
-      {!isLoading && !error && events.length === 0 && (
-        <p className="text-sm text-stone-500">Todavía no hay publicaciones registradas.</p>
-      )}
-
-      {!isLoading && !error && events.length > 0 && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {events.map((event) => (
-            <article key={`${event.media_id}-${event.created_at}`} className="rounded-xl border border-stone-200 p-4">
-              {event.media_url && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={event.media_url}
-                  alt={event.caption ?? "Publicación de Instagram"}
-                  className="mb-3 h-44 w-full rounded-lg object-cover"
-                />
-              )}
-
-              <p className="mb-2 text-sm text-stone-800">{event.caption ?? "Sin caption"}</p>
-
-              {event.permalink ? (
-                <a
-                  href={event.permalink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-medium text-emerald-700 hover:underline"
-                >
-                  Ver publicación en Instagram
-                </a>
-              ) : (
-                <p className="text-sm text-stone-500">Sin permalink disponible</p>
-              )}
-
-              <p className="mt-3 text-xs text-stone-400">{formatDate(event.created_at)}</p>
-            </article>
-          ))}
-        </div>
-      )}
-
-      {!isLoading && !error && (
-        <div className="mt-4 flex items-center justify-between text-xs text-stone-400">
-          <span>
-            {total === 0
-              ? "Sin resultados"
-              : `Mostrando ${offset + 1} al ${Math.min(offset + events.length, total)} de ${total}`}
+      {!isLoading && !error && total > PAGE_SIZE && (
+        <footer className="flex items-center justify-between border-t border-stone-100 px-4 py-3">
+          <span className="text-xs text-stone-400">
+            Pag. {page + 1} de {totalPages}
           </span>
-          <span>Offset {offset}</span>
-        </div>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={goPrevious}
+              disabled={page === 0}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={goNext}
+              disabled={!hasNextPage}
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-stone-500 hover:bg-stone-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </footer>
       )}
     </section>
   );

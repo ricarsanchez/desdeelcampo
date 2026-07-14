@@ -9,6 +9,7 @@ type InstagramPostRow = {
   media_url: string | null;
   permalink: string | null;
   created_at: string;
+  media_type: string | null;
 };
 
 function parsePositiveInt(value: string | null, fallback: number, max: number) {
@@ -34,7 +35,7 @@ export async function GET(request: Request) {
 
   const { data, error, count } = await supabase
     .from("instagram_posts")
-    .select("media_id, caption, media_url, permalink, created_at", { count: "exact" })
+    .select("media_id, caption, media_url, permalink, created_at, media_type", { count: "exact" })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -55,6 +56,7 @@ export async function GET(request: Request) {
     media_url: row.media_url,
     permalink: row.permalink,
     created_at: row.created_at,
+    media_type: row.media_type,
   }));
 
   return NextResponse.json(

@@ -19,6 +19,7 @@ type InstagramWebhookRecord = {
   media_url: string | null;
   permalink: string | null;
   created_at: string;
+  media_type: string | null;
 };
 
 function toIsoTimestamp(value: unknown): string {
@@ -48,6 +49,7 @@ function mapMediaToRecords(items: InstagramMediaItem[]): InstagramWebhookRecord[
       media_url: (item.media_type === "VIDEO" ? item.thumbnail_url ?? item.media_url : item.media_url) ?? null,
       permalink: item.permalink || null,
       created_at: toIsoTimestamp(item.timestamp),
+      media_type: item.media_type?.trim() || null,
     }));
 }
 

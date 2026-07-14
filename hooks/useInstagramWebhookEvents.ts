@@ -8,6 +8,7 @@ export type InstagramWebhookEvent = {
   permalink: string | null;
   created_at: string;
   media_url: string | null;
+  media_type: string | null;
 };
 
 type UseInstagramWebhookEventsResult = {
@@ -43,6 +44,7 @@ function parseEvent(item: unknown): InstagramWebhookEvent | null {
     permalink: toStringOrNull(item.permalink),
     created_at: toStringOrNull(item.created_at) ?? new Date().toISOString(),
     media_url: toStringOrNull(item.media_url),
+    media_type: toStringOrNull(item.media_type),
   };
 }
 
