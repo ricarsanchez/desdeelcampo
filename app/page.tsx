@@ -399,8 +399,8 @@ export default async function HomePage() {
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
 
-          {/* ── LEFT: Noticias (25%) ── */}
-          <section className="w-full lg:w-1/4 shrink-0 space-y-5">
+          {/* ── LEFT: Instagram ── */}
+          <section className="w-full lg:w-[360px] shrink-0 space-y-5">
             <InstagramWebhookEventsList />
           </section>
 
