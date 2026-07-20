@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
-import { saveFormDataFileToPublicUploads } from "../_utils/upload";
+import { unlink } from "node:fs/promises";
+import path from "node:path";
+import { saveFormDataFileToPublicUploads, uploadsDirAbsolute } from "../_utils/upload";
 import { createId, readStoreData, writeStoreData } from "../_utils/store";
 
 export const runtime = "nodejs";
@@ -95,9 +97,15 @@ export async function DELETE(request: Request) {
     }
 
     const store = await readStoreData();
-    const exists = store.lotes.some((l) => l.id === id);
-    if (!exists) {
+    const lote = store.lotes.find((l) => l.id === id);
+    if (!lote) {
       return NextResponse.json({ ok: false, error: "Lote no encontrado." }, { status: 404 });
+    }
+
+    if (lote.imageUrl) {
+      const filename = path.basename(new URL(lote.imageUrl, "http://localhost").pathname);
+      const filePath = path.join(uploadsDirAbsolute(), filename);
+      await unlink(filePath).catch(() => {});
     }
 
     await writeStoreData({

@@ -4,6 +4,7 @@ import {
   Weight,
   TrendingUp,
   Eye,
+  Info,
 } from "lucide-react";
 import MarketPrices from "../components/MarketPrices";
 import InstagramWebhookEventsList from "../components/InstagramWebhookEventsList";
@@ -75,9 +76,10 @@ const defaultLotes: Lote[] = [
 // ─────────────────────────────────────────────────────────────
 const defaultLogoUrl = "/logo.png";
 
-function Header({ siteName }: { siteName: string }) {
+function Header({ siteName, whatsappNumber }: { siteName: string; whatsappNumber: string }) {
+  const phone = whatsappNumber || "5493492000000";
   const whatsappUrl =
-    `https://wa.me/5493492000000?text=Hola!%20Me%20comunico%20desde%20${encodeURIComponent(
+    `https://wa.me/${phone}?text=Hola!%20Me%20comunico%20desde%20${encodeURIComponent(
       siteName,
     )}.`;
 
@@ -159,13 +161,36 @@ function MarketTicker({ items }: { items: string[] }) {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Quienes Somos Section
+// ─────────────────────────────────────────────────────────────
+function QuienesSomosSection({ title, content }: { title: string; content: string }) {
+  return (
+    <section className="w-full bg-[#FDFBF7] py-10 border-b border-stone-200">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="max-w-3xl mx-auto text-center">
+          <div className="inline-flex items-center gap-2 mb-4">
+            <Info className="w-5 h-5 text-[#14532D]" />
+            <h2 className="text-2xl font-extrabold text-stone-800">
+              {title || "Quiénes Somos"}
+            </h2>
+          </div>
+          <p className="text-stone-600 text-base leading-relaxed whitespace-pre-line">
+            {content}
+          </p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Lot Card
 // ─────────────────────────────────────────────────────────────
-function LotCard({ lot }: { lot: Lote }) {
+function LotCard({ lot, defaultWhatsappNumber }: { lot: Lote; defaultWhatsappNumber: string }) {
   const whatsappText = encodeURIComponent(
     `Hola! Estoy interesado en el lote: "${lot.titulo}" - ${lot.peso} kg - ${lot.localidad}`,
   );
-  const phoneNumber = lot.telefono?.replace(/\D/g, "") || "5493492000000";
+  const phoneNumber = lot.telefono?.replace(/\D/g, "") || defaultWhatsappNumber || "5493492000000";
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${whatsappText}`;
 
   return (
@@ -379,6 +404,9 @@ export default async function HomePage() {
   }));
   const siteName = store.siteName || "Desde el Campo 2026";
   const lotes = store.lotes.length > 0 ? store.lotes : defaultLotes;
+  const whatsappNumber = store.siteConfig?.whatsappNumber || "5493492000000";
+  const quienesSomosTitle = store.siteConfig?.quienesSomosTitle || "";
+  const quienesSomosContent = store.siteConfig?.quienesSomosContent || "";
   const sortedNews = [...noticias].sort((a, b) => b.date.localeCompare(a.date));
   const selectedDollarRates = getSelectedDollarRates(marketPrices, store.dollarDisplayTypes);
   const tickerItems =
@@ -393,8 +421,12 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen bg-[#FDFBF7]">
-      <Header siteName={siteName} />
+      <Header siteName={siteName} whatsappNumber={whatsappNumber} />
       <MarketTicker items={tickerItems} />
+
+      {quienesSomosContent && (
+        <QuienesSomosSection title={quienesSomosTitle} content={quienesSomosContent} />
+      )}
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
@@ -419,7 +451,7 @@ export default async function HomePage() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               {lotes.map((lot) => (
-                <LotCard key={lot.id} lot={lot} />
+                <LotCard key={lot.id} lot={lot} defaultWhatsappNumber={whatsappNumber} />
               ))}
             </div>
             <div className="mt-6 text-center">

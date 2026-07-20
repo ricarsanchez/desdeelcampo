@@ -1,4 +1,6 @@
 "use client";
+import { useState } from "react";
+import { ConfirmModal } from "./ConfirmModal";
 
 type LoteDraft = {
   titulo: string;
@@ -47,8 +49,33 @@ export function LotesForm({
   isPublishingLote,
   lotes,
 }: LotesFormProps) {
+  const [loteToDelete, setLoteToDelete] = useState<string | null>(null);
+  const [isDeletingLote, setIsDeletingLote] = useState(false);
+
+  async function handleDeleteConfirm() {
+    if (!loteToDelete || isDeletingLote) return;
+    setIsDeletingLote(true);
+    try {
+      await onDeleteLote(loteToDelete);
+    } finally {
+      setIsDeletingLote(false);
+      setLoteToDelete(null);
+    }
+  }
+
   return (
     <>
+      {loteToDelete && (
+        <ConfirmModal
+          title="Eliminar lote"
+          message="¿Estás seguro de que deseas eliminar este lote? Esta acción no se puede deshacer."
+          confirmLabel="Eliminar"
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setLoteToDelete(null)}
+          loading={isDeletingLote}
+        />
+      )}
+
       <div className="grid gap-4 md:grid-cols-2">
         <div>
           <label className="block text-sm font-semibold text-slate-800">Título</label>
@@ -216,7 +243,7 @@ export function LotesForm({
                     </div>
                     <button
                       type="button"
-                      onClick={() => onDeleteLote(lote.id)}
+                      onClick={() => setLoteToDelete(lote.id)}
                       className="rounded-full border border-rose-600 px-3 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition"
                     >
                       Eliminar

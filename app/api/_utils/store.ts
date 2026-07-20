@@ -33,6 +33,16 @@ export type Lote = {
   telefono?: string;
 };
 
+export type SiteConfig = {
+  whatsappNumber?: string;
+  instagram?: string;
+  facebook?: string;
+  email?: string;
+  address?: string;
+  quienesSomosTitle?: string;
+  quienesSomosContent?: string;
+};
+
 export type LogoState = {
   filename: string;
   url: string;
@@ -66,6 +76,7 @@ export type StoreData = {
   lotes: Lote[];
   banners: AdAsset[];
   noticias: NewsArticle[];
+  siteConfig: SiteConfig;
 };
 
 const dataDirAbsolute = path.join(process.cwd(), "data");
@@ -87,6 +98,7 @@ export async function readStoreData(): Promise<StoreData> {
       noticias: data.noticias ?? [],
       siteName: data.siteName ?? "Desde el Campo 2026",
       logo: data.logo ?? null,
+      siteConfig: data.siteConfig ?? {},
     };
   } catch {
     return {
@@ -96,6 +108,7 @@ export async function readStoreData(): Promise<StoreData> {
       lotes: [],
       banners: [],
       noticias: [],
+      siteConfig: {},
     };
   }
 }

@@ -26,5 +26,8 @@
       "contentType": "image/png"
     }
   ],
-  "noticias": []
+  "noticias": [],
+  "siteConfig": {
+    "whatsappNumber": "3408402405"
+  }
 }

@@ -7,9 +7,10 @@ import { NewsManagementForm } from "../../components/admin/NewsManagementForm";
 import PriceManagementForm from "../../components/admin/PriceManagementForm";
 import { PublicidadForm } from "../../components/admin/PublicidadForm";
 import { InstagramSyncCard } from "../../components/admin/InstagramSyncCard";
+import { ConfiguracionForm } from "../../components/admin/ConfiguracionForm";
 import type { NewsArticle } from "../../lib/news";
 
-type TabKey = "lotes" | "publicidad" | "noticias" | "precios" | "instagram";
+type TabKey = "lotes" | "publicidad" | "noticias" | "precios" | "instagram" | "configuracion";
 
 type MarketPriceItem = {
   id: string;
@@ -110,6 +111,15 @@ export default function AdminPage() {
   const [isSavingPrices, setIsSavingPrices] = useState(false);
   const [priceApiError, setPriceApiError] = useState<string | null>(null);
 
+  const [whatsappDraft, setWhatsappDraft] = useState("");
+  const [whatsappSaved, setWhatsappSaved] = useState("");
+  const [quienesSomosTitleDraft, setQuienesSomosTitleDraft] = useState("");
+  const [quienesSomosContentDraft, setQuienesSomosContentDraft] = useState("");
+  const [quienesSomosTitleSaved, setQuienesSomosTitleSaved] = useState("");
+  const [quienesSomosContentSaved, setQuienesSomosContentSaved] = useState("");
+  const [isSavingConfig, setIsSavingConfig] = useState(false);
+  const [configApiError, setConfigApiError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!loteImageFile) {
       setLoteImagePreviewUrl(null);
@@ -143,20 +153,22 @@ export default function AdminPage() {
     async function loadAdminData() {
       setLoadError(null);
       try {
-        const [logoRes, lotesRes, bannersRes, pricesRes, newsRes] = await Promise.all([
+        const [logoRes, lotesRes, bannersRes, pricesRes, newsRes, configRes] = await Promise.all([
           fetch("/api/logo"),
           fetch("/api/lotes"),
           fetch("/api/banners"),
           fetch("/api/market-prices"),
           fetch("/api/news"),
+          fetch("/api/config"),
         ]);
 
-        const [logoData, lotesData, bannersData, pricesData, newsData] = await Promise.all([
+        const [logoData, lotesData, bannersData, pricesData, newsData, configData] = await Promise.all([
           logoRes.json(),
           lotesRes.json(),
           bannersRes.json(),
           pricesRes.json(),
           newsRes.json(),
+          configRes.json(),
         ]);
 
         if (!logoRes.ok || !logoData.ok) {
@@ -174,11 +186,23 @@ export default function AdminPage() {
         if (!newsRes.ok || !newsData.ok) {
           throw new Error(newsData.error ?? "No se pudieron cargar las noticias.");
         }
+        if (!configRes.ok || !configData.ok) {
+          throw new Error(configData.error ?? "No se pudo cargar la configuración.");
+        }
 
         setLotes(Array.isArray(lotesData.lotes) ? lotesData.lotes : []);
         setAds(Array.isArray(bannersData.banners) ? bannersData.banners : []);
         setMarketPrices(pricesData.prices ?? null);
         setNews(Array.isArray(newsData.noticias) ? newsData.noticias : []);
+        const savedNumber = configData.config?.whatsappNumber ?? "";
+        setWhatsappDraft(savedNumber);
+        setWhatsappSaved(savedNumber);
+        const savedTitle = configData.config?.quienesSomosTitle ?? "";
+        const savedContent = configData.config?.quienesSomosContent ?? "";
+        setQuienesSomosTitleDraft(savedTitle);
+        setQuienesSomosContentDraft(savedContent);
+        setQuienesSomosTitleSaved(savedTitle);
+        setQuienesSomosContentSaved(savedContent);
       } catch (error) {
         setLoadError(error instanceof Error ? error.message : "Error al cargar datos iniciales.");
       } finally {
@@ -337,7 +361,7 @@ export default function AdminPage() {
   }
 
   async function onDeleteLote(id: string) {
-    if (!confirm("¿Eliminar este lote?")) return;
+    setLoteApiError(null);
     try {
       const res = await fetch(`/api/lotes?id=${encodeURIComponent(id)}`, { method: "DELETE" });
       const data = await res.json();
@@ -422,6 +446,62 @@ export default function AdminPage() {
       setPriceApiError(error instanceof Error ? error.message : "No se pudo guardar la selección.");
     } finally {
       setIsSavingPrices(false);
+    }
+  }
+
+  async function onSaveConfig() {
+    if (isSavingConfig) return;
+    setConfigApiError(null);
+    setIsSavingConfig(true);
+
+    try {
+      const body: Record<string, string> = {};
+
+      const cleaned = whatsappDraft.replace(/\D/g, "");
+      if (cleaned && cleaned !== whatsappSaved) {
+        body.whatsappNumber = cleaned;
+      } else if (!cleaned && whatsappSaved) {
+        body.whatsappNumber = "";
+      }
+
+      const trimmedTitle = quienesSomosTitleDraft.trim();
+      if (trimmedTitle !== quienesSomosTitleSaved) {
+        body.quienesSomosTitle = trimmedTitle;
+      }
+
+      const trimmedContent = quienesSomosContentDraft.trim();
+      if (trimmedContent !== quienesSomosContentSaved) {
+        body.quienesSomosContent = trimmedContent;
+      }
+
+      if (Object.keys(body).length === 0) {
+        setIsSavingConfig(false);
+        return;
+      }
+
+      const res = await fetch("/api/config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.ok) {
+        throw new Error(data.error ?? `Error ${res.status}`);
+      }
+
+      const savedNumber = data.config?.whatsappNumber ?? "";
+      const savedTitle = data.config?.quienesSomosTitle ?? "";
+      const savedContent = data.config?.quienesSomosContent ?? "";
+      setWhatsappDraft(savedNumber);
+      setWhatsappSaved(savedNumber);
+      setQuienesSomosTitleDraft(savedTitle);
+      setQuienesSomosContentDraft(savedContent);
+      setQuienesSomosTitleSaved(savedTitle);
+      setQuienesSomosContentSaved(savedContent);
+    } catch (error) {
+      setConfigApiError(error instanceof Error ? error.message : "No se pudo guardar la configuración.");
+    } finally {
+      setIsSavingConfig(false);
     }
   }
 
@@ -524,6 +604,25 @@ export default function AdminPage() {
             )}
 
             {tab === "instagram" && <InstagramSyncCard />}
+
+            {tab === "configuracion" && (
+              <AdminSection title="Configuración" description="WhatsApp, redes sociales, correo y dirección del sitio.">
+                <ConfiguracionForm
+                  whatsappDraft={whatsappDraft}
+                  setWhatsappDraft={setWhatsappDraft}
+                  whatsappSaved={whatsappSaved}
+                  quienesSomosTitleDraft={quienesSomosTitleDraft}
+                  setQuienesSomosTitleDraft={setQuienesSomosTitleDraft}
+                  quienesSomosContentDraft={quienesSomosContentDraft}
+                  setQuienesSomosContentDraft={setQuienesSomosContentDraft}
+                  quienesSomosTitleSaved={quienesSomosTitleSaved}
+                  quienesSomosContentSaved={quienesSomosContentSaved}
+                  isSaving={isSavingConfig}
+                  apiError={configApiError}
+                  onSave={onSaveConfig}
+                />
+              </AdminSection>
+            )}
 
             {preview && (
               <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
