@@ -101,13 +101,18 @@ function Header({ siteName, whatsappNumber }: { siteName: string; whatsappNumber
 
         {/* Nav */}
         <nav className="hidden md:flex items-center gap-1">
-          {["Inicio", "Quienes Somos", "Remates", "Contacto"].map((item) => (
+          {[
+            { label: "Inicio", href: "#" },
+            { label: "Quienes Somos", href: "#quienes-somos" },
+            { label: "Remates", href: "#" },
+            { label: "Contacto", href: "#" },
+          ].map((item) => (
             <a
-              key={item}
-              href="#"
+              key={item.label}
+              href={item.href}
               className="px-4 py-2 rounded-lg text-sm font-medium text-stone-600 hover:text-green-800 hover:bg-green-50 transition-all"
             >
-              {item}
+              {item.label}
             </a>
           ))}
         </nav>
@@ -166,7 +171,7 @@ function MarketTicker({ items }: { items: string[] }) {
 // ─────────────────────────────────────────────────────────────
 function QuienesSomosSection({ title, content }: { title: string; content: string }) {
   return (
-    <section className="w-full bg-[#FDFBF7] py-10 border-b border-stone-200">
+    <section id="quienes-somos" className="w-full bg-[#FDFBF7] py-10 border-b border-stone-200">
       <div className="max-w-7xl mx-auto px-4">
         <div className="max-w-3xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 mb-4">
@@ -429,10 +434,6 @@ export default async function HomePage() {
       <Header siteName={siteName} whatsappNumber={whatsappNumber} />
       <MarketTicker items={tickerItems} />
 
-      {quienesSomosContent && (
-        <QuienesSomosSection title={quienesSomosTitle} content={quienesSomosContent} />
-      )}
-
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
 
@@ -483,6 +484,10 @@ export default async function HomePage() {
 
         <NewsSection news={sortedNews} />
       </main>
+
+      {quienesSomosContent && (
+        <QuienesSomosSection title={quienesSomosTitle} content={quienesSomosContent} />
+      )}
 
       <footer className="mt-16 bg-[#1c1917] text-center py-6">
         <p className="text-stone-400 text-sm">

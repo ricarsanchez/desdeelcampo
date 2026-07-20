@@ -117,8 +117,17 @@ export default function AdminPage() {
   const [quienesSomosContentDraft, setQuienesSomosContentDraft] = useState("");
   const [quienesSomosTitleSaved, setQuienesSomosTitleSaved] = useState("");
   const [quienesSomosContentSaved, setQuienesSomosContentSaved] = useState("");
+  const [instagramDraft, setInstagramDraft] = useState("");
+  const [instagramSaved, setInstagramSaved] = useState("");
+  const [facebookDraft, setFacebookDraft] = useState("");
+  const [facebookSaved, setFacebookSaved] = useState("");
+  const [emailDraft, setEmailDraft] = useState("");
+  const [emailSaved, setEmailSaved] = useState("");
+  const [addressDraft, setAddressDraft] = useState("");
+  const [addressSaved, setAddressSaved] = useState("");
   const [isSavingConfig, setIsSavingConfig] = useState(false);
   const [configApiError, setConfigApiError] = useState<string | null>(null);
+  const [configSuccessMessage, setConfigSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loteImageFile) {
@@ -203,6 +212,18 @@ export default function AdminPage() {
         setQuienesSomosContentDraft(savedContent);
         setQuienesSomosTitleSaved(savedTitle);
         setQuienesSomosContentSaved(savedContent);
+        const savedInstagram = configData.config?.instagram ?? "";
+        setInstagramDraft(savedInstagram);
+        setInstagramSaved(savedInstagram);
+        const savedFacebook = configData.config?.facebook ?? "";
+        setFacebookDraft(savedFacebook);
+        setFacebookSaved(savedFacebook);
+        const savedEmail = configData.config?.email ?? "";
+        setEmailDraft(savedEmail);
+        setEmailSaved(savedEmail);
+        const savedAddress = configData.config?.address ?? "";
+        setAddressDraft(savedAddress);
+        setAddressSaved(savedAddress);
       } catch (error) {
         setLoadError(error instanceof Error ? error.message : "Error al cargar datos iniciales.");
       } finally {
@@ -452,32 +473,21 @@ export default function AdminPage() {
   async function onSaveConfig() {
     if (isSavingConfig) return;
     setConfigApiError(null);
+    setConfigSuccessMessage(null);
     setIsSavingConfig(true);
 
     try {
       const body: Record<string, string> = {};
 
       const cleaned = whatsappDraft.replace(/\D/g, "");
-      if (cleaned && cleaned !== whatsappSaved) {
-        body.whatsappNumber = cleaned;
-      } else if (!cleaned && whatsappSaved) {
-        body.whatsappNumber = "";
-      }
+      body.whatsappNumber = cleaned || "";
 
-      const trimmedTitle = quienesSomosTitleDraft.trim();
-      if (trimmedTitle !== quienesSomosTitleSaved) {
-        body.quienesSomosTitle = trimmedTitle;
-      }
-
-      const trimmedContent = quienesSomosContentDraft.trim();
-      if (trimmedContent !== quienesSomosContentSaved) {
-        body.quienesSomosContent = trimmedContent;
-      }
-
-      if (Object.keys(body).length === 0) {
-        setIsSavingConfig(false);
-        return;
-      }
+      body.quienesSomosTitle = quienesSomosTitleDraft.trim();
+      body.quienesSomosContent = quienesSomosContentDraft.trim();
+      body.instagram = instagramDraft.trim();
+      body.facebook = facebookDraft.trim();
+      body.email = emailDraft.trim();
+      body.address = addressDraft.trim();
 
       const res = await fetch("/api/config", {
         method: "POST",
@@ -489,20 +499,51 @@ export default function AdminPage() {
         throw new Error(data.error ?? `Error ${res.status}`);
       }
 
-      const savedNumber = data.config?.whatsappNumber ?? "";
-      const savedTitle = data.config?.quienesSomosTitle ?? "";
-      const savedContent = data.config?.quienesSomosContent ?? "";
-      setWhatsappDraft(savedNumber);
-      setWhatsappSaved(savedNumber);
-      setQuienesSomosTitleDraft(savedTitle);
-      setQuienesSomosContentDraft(savedContent);
-      setQuienesSomosTitleSaved(savedTitle);
-      setQuienesSomosContentSaved(savedContent);
+      applySavedConfig(data.config);
+      setConfigSuccessMessage("Configuración guardada correctamente.");
     } catch (error) {
       setConfigApiError(error instanceof Error ? error.message : "No se pudo guardar la configuración.");
     } finally {
       setIsSavingConfig(false);
     }
+  }
+
+  function onResetConfig() {
+    setWhatsappDraft(whatsappSaved);
+    setQuienesSomosTitleDraft(quienesSomosTitleSaved);
+    setQuienesSomosContentDraft(quienesSomosContentSaved);
+    setInstagramDraft(instagramSaved);
+    setFacebookDraft(facebookSaved);
+    setEmailDraft(emailSaved);
+    setAddressDraft(addressSaved);
+    setConfigApiError(null);
+    setConfigSuccessMessage("Cambios descartados. Valores restablecidos desde la base de datos.");
+  }
+
+  function applySavedConfig(config: Record<string, unknown>) {
+    const s: Record<string, string> = {
+      whatsappNumber: String(config?.whatsappNumber ?? ""),
+      quienesSomosTitle: String(config?.quienesSomosTitle ?? ""),
+      quienesSomosContent: String(config?.quienesSomosContent ?? ""),
+      instagram: String(config?.instagram ?? ""),
+      facebook: String(config?.facebook ?? ""),
+      email: String(config?.email ?? ""),
+      address: String(config?.address ?? ""),
+    };
+    setWhatsappDraft(s.whatsappNumber);
+    setWhatsappSaved(s.whatsappNumber);
+    setQuienesSomosTitleDraft(s.quienesSomosTitle);
+    setQuienesSomosContentDraft(s.quienesSomosContent);
+    setQuienesSomosTitleSaved(s.quienesSomosTitle);
+    setQuienesSomosContentSaved(s.quienesSomosContent);
+    setInstagramDraft(s.instagram);
+    setInstagramSaved(s.instagram);
+    setFacebookDraft(s.facebook);
+    setFacebookSaved(s.facebook);
+    setEmailDraft(s.email);
+    setEmailSaved(s.email);
+    setAddressDraft(s.address);
+    setAddressSaved(s.address);
   }
 
   return (
@@ -617,9 +658,23 @@ export default function AdminPage() {
                   setQuienesSomosContentDraft={setQuienesSomosContentDraft}
                   quienesSomosTitleSaved={quienesSomosTitleSaved}
                   quienesSomosContentSaved={quienesSomosContentSaved}
+                  instagramDraft={instagramDraft}
+                  setInstagramDraft={setInstagramDraft}
+                  instagramSaved={instagramSaved}
+                  facebookDraft={facebookDraft}
+                  setFacebookDraft={setFacebookDraft}
+                  facebookSaved={facebookSaved}
+                  emailDraft={emailDraft}
+                  setEmailDraft={setEmailDraft}
+                  emailSaved={emailSaved}
+                  addressDraft={addressDraft}
+                  setAddressDraft={setAddressDraft}
+                  addressSaved={addressSaved}
                   isSaving={isSavingConfig}
                   apiError={configApiError}
+                  successMessage={configSuccessMessage}
                   onSave={onSaveConfig}
+                  onReset={onResetConfig}
                 />
               </AdminSection>
             )}
