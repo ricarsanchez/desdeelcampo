@@ -10,6 +10,7 @@ import MarketPrices from "../components/MarketPrices";
 import InstagramWebhookEventsList from "../components/InstagramWebhookEventsList";
 import { fetchDollarRates, getSelectedDollarRates } from "./api/_utils/marketPrices";
 import { readStoreData, type Lote, type AdAsset } from "./api/_utils/store";
+import { readSiteConfig } from "./api/_utils/siteConfig";
 import { readNewsArticles, type NewsArticle } from "../lib/news";
 import { NewsSection } from "../components/NewsSection";
 
@@ -396,7 +397,11 @@ function QuickLinksWidget() {
 // Page
 // ─────────────────────────────────────────────────────────────
 export default async function HomePage() {
-  const [store, noticias] = await Promise.all([readStoreData(), readNewsArticles()]);
+  const [store, noticias, siteConfig] = await Promise.all([
+    readStoreData(),
+    readNewsArticles(),
+    readSiteConfig(),
+  ]);
   const marketPrices = await fetchDollarRates().catch(() => ({
     updatedAt: new Date().toISOString(),
     dolar: [],
@@ -404,9 +409,9 @@ export default async function HomePage() {
   }));
   const siteName = store.siteName || "Desde el Campo 2026";
   const lotes = store.lotes.length > 0 ? store.lotes : defaultLotes;
-  const whatsappNumber = store.siteConfig?.whatsappNumber || "5493492000000";
-  const quienesSomosTitle = store.siteConfig?.quienesSomosTitle || "";
-  const quienesSomosContent = store.siteConfig?.quienesSomosContent || "";
+  const whatsappNumber = siteConfig?.whatsappNumber || "5493492000000";
+  const quienesSomosTitle = siteConfig?.quienesSomosTitle || "";
+  const quienesSomosContent = siteConfig?.quienesSomosContent || "";
   const sortedNews = [...noticias].sort((a, b) => b.date.localeCompare(a.date));
   const selectedDollarRates = getSelectedDollarRates(marketPrices, store.dollarDisplayTypes);
   const tickerItems =
