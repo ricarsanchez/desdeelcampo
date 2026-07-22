@@ -11,6 +11,7 @@ import InstagramWebhookEventsList from "../components/InstagramWebhookEventsList
 import { fetchDollarRates, getSelectedDollarRates } from "./api/_utils/marketPrices";
 import { readStoreData, type Lote, type AdAsset } from "./api/_utils/store";
 import { readSiteConfig } from "./api/_utils/siteConfig";
+import { readPublicidad } from "./api/_utils/publicidad";
 import { readNewsArticles, type NewsArticle } from "../lib/news";
 import { NewsSection } from "../components/NewsSection";
 
@@ -402,10 +403,11 @@ function QuickLinksWidget() {
 // Page
 // ─────────────────────────────────────────────────────────────
 export default async function HomePage() {
-  const [store, noticias, siteConfig] = await Promise.all([
+  const [store, noticias, siteConfig, banners] = await Promise.all([
     readStoreData(),
     readNewsArticles(),
     readSiteConfig(),
+    readPublicidad(),
   ]);
   const marketPrices = await fetchDollarRates().catch(() => ({
     updatedAt: new Date().toISOString(),
@@ -473,10 +475,10 @@ export default async function HomePage() {
 
           {/* ── RIGHT: Sidebar (25%) ── */}
           <aside className="w-full lg:w-1/4 shrink-0 space-y-5">
-            {store.banners && store.banners.length > 0 && <AdSpaceWidget />}
+            {banners && banners.length > 0 && <AdSpaceWidget />}
             <MarketPrices rates={selectedDollarRates} updatedAt={marketPrices.updatedAt} />
-            {store.banners && store.banners.length > 0 && (
-              <SponsorsWidget banners={store.banners} />
+            {banners && banners.length > 0 && (
+              <SponsorsWidget banners={banners} />
             )}
             <QuickLinksWidget />
           </aside>

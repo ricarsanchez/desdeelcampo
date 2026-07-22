@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { saveFormDataFileToPublicUploads } from "../_utils/upload";
-import { createId, readStoreData, writeStoreData } from "../_utils/store";
+import { createId } from "../_utils/store";
+import {
+  readPublicidad,
+  addPublicidadAsset,
+  deletePublicidadAsset,
+} from "../_utils/publicidad";
 
 export const runtime = "nodejs";
 
@@ -16,8 +21,8 @@ function isAdType(value: string): value is AdType {
 }
 
 export async function GET() {
-  const store = await readStoreData();
-  return NextResponse.json({ ok: true, banners: store.banners });
+  const banners = await readPublicidad();
+  return NextResponse.json({ ok: true, banners });
 }
 
 export async function POST(request: Request) {
@@ -44,7 +49,6 @@ export async function POST(request: Request) {
     }
 
     const saved = await saveFormDataFileToPublicUploads(file, type);
-    const store = await readStoreData();
 
     const newAsset = {
       id: createId(),
@@ -55,10 +59,7 @@ export async function POST(request: Request) {
       contentType: saved.contentType,
     };
 
-    await writeStoreData({
-      ...store,
-      banners: [newAsset, ...store.banners],
-    });
+    await addPublicidadAsset(newAsset);
 
     return NextResponse.json({
       ok: true,
@@ -81,16 +82,10 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ ok: false, error: "Falta el id del banner." }, { status: 400 });
     }
 
-    const store = await readStoreData();
-    const exists = store.banners.some((b) => b.id === id);
-    if (!exists) {
+    const deleted = await deletePublicidadAsset(id);
+    if (!deleted) {
       return NextResponse.json({ ok: false, error: "Banner no encontrado." }, { status: 404 });
     }
-
-    await writeStoreData({
-      ...store,
-      banners: store.banners.filter((b) => b.id !== id),
-    });
 
     return NextResponse.json({ ok: true });
   } catch (error) {
@@ -100,4 +95,3 @@ export async function DELETE(request: Request) {
     );
   }
 }
-
