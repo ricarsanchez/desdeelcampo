@@ -6,19 +6,39 @@ type PublicidadRow = {
   type: string;
   file_name: string;
   file_url: string;
-  destino: string;
+  destino: string | null;
   content_type: string | null;
+  activo: boolean | null;
+  titulo: string | null;
+  orden: number | null;
+  slot: string | null;
+  es_video: boolean | null;
+  width: number | null;
+  height: number | null;
+  file_size: number | null;
   created_at: string | null;
+  updated_at: string | null;
 };
 
 function rowToAsset(row: PublicidadRow): AdAsset {
+  const type = row.type === "video" ? "video" : "banner";
+
   return {
     id: row.id,
-    type: row.type as "banner" | "video",
+    type,
     fileName: row.file_name,
     fileUrl: row.file_url,
-    destino: row.destino,
+    destino: row.destino ?? undefined,
     contentType: row.content_type ?? undefined,
+    activo: row.activo ?? true,
+    titulo: row.titulo ?? undefined,
+    orden: row.orden ?? 0,
+    slot: row.slot ?? "sidebar",
+    esVideo: row.es_video ?? type === "video",
+    width: row.width ?? undefined,
+    height: row.height ?? undefined,
+    fileSize: row.file_size ?? undefined,
+    updatedAt: row.updated_at ?? row.created_at ?? undefined,
   };
 }
 
@@ -27,8 +47,17 @@ function assetToRow(asset: AdAsset): Record<string, unknown> {
     type: asset.type,
     file_name: asset.fileName,
     file_url: asset.fileUrl,
-    destino: asset.destino,
+    destino: asset.destino ?? null,
     content_type: asset.contentType ?? null,
+    activo: asset.activo ?? true,
+    titulo: asset.titulo ?? null,
+    orden: asset.orden ?? 0,
+    slot: asset.slot ?? "sidebar",
+    es_video: asset.esVideo ?? asset.type === "video",
+    width: asset.width ?? null,
+    height: asset.height ?? null,
+    file_size: asset.fileSize ?? null,
+    updated_at: asset.updatedAt ?? new Date().toISOString(),
   };
 }
 
@@ -39,6 +68,7 @@ export async function readPublicidad(): Promise<AdAsset[]> {
     const { data, error } = await supabase
       .from("publicidad")
       .select("*")
+      .order("orden", { ascending: true })
       .order("created_at", { ascending: false });
 
     if (!error && data) {

@@ -4,13 +4,24 @@ import crypto from "node:crypto";
 
 export type AdAssetType = "banner" | "video";
 
+export type AdSlot = "sidebar" | "horizontal" | "hero" | "footer";
+
 export type AdAsset = {
   id: string;
   type: AdAssetType;
   fileName: string;
   fileUrl: string;
-  destino: string;
+  destino?: string;
   contentType?: string;
+  activo?: boolean;
+  titulo?: string;
+  orden?: number;
+  slot?: AdSlot | string;
+  esVideo?: boolean;
+  width?: number;
+  height?: number;
+  fileSize?: number;
+  updatedAt?: string;
 };
 
 export type NewsArticle = {
@@ -69,6 +80,55 @@ function normalizeDollarDisplayTypes(value: unknown): string[] {
   return unique.length > 0 ? unique : [...DEFAULT_DOLLAR_DISPLAY_TYPES];
 }
 
+function normalizeBanners(value: unknown): AdAsset[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const normalized: (AdAsset | null)[] = value
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+    .map((item) => {
+      const type = item.type === "video" ? "video" : "banner";
+      const fileUrl = String(item.fileUrl ?? item.file_url ?? "");
+      const fileName = String(item.fileName ?? item.file_name ?? "");
+      const id = String(item.id ?? "");
+
+      if (!id || !fileUrl) {
+        return null;
+      }
+
+      const orden = Number(item.orden ?? item.order ?? 0);
+      const width = Number(item.width ?? item.Width ?? NaN);
+      const height = Number(item.height ?? item.Height ?? NaN);
+      const fileSize = Number(item.fileSize ?? item.file_size ?? NaN);
+
+      return {
+        id,
+        type: type as AdAssetType,
+        fileName,
+        fileUrl,
+        destino: item.destino !== undefined ? String(item.destino) : undefined,
+        contentType: item.contentType !== undefined ? String(item.contentType) : undefined,
+        activo: typeof item.activo === "boolean" ? item.activo : true,
+        titulo: item.titulo !== undefined ? String(item.titulo) : undefined,
+        orden: Number.isFinite(orden) ? orden : 0,
+        slot: String(item.slot ?? "sidebar"),
+        esVideo: typeof item.esVideo === "boolean" ? item.esVideo : type === "video",
+        width: Number.isFinite(width) ? width : undefined,
+        height: Number.isFinite(height) ? height : undefined,
+        fileSize: Number.isFinite(fileSize) ? fileSize : undefined,
+        updatedAt:
+          item.updatedAt !== undefined
+            ? String(item.updatedAt)
+            : item.updated_at !== undefined
+              ? String(item.updated_at)
+              : undefined,
+      };
+    });
+
+  return normalized.filter((item): item is AdAsset => item !== null);
+}
+
 export type StoreData = {
   siteName: string;
   logo: LogoState;
@@ -94,7 +154,7 @@ export async function readStoreData(): Promise<StoreData> {
       ...data,
       dollarDisplayTypes: normalizeDollarDisplayTypes(data.dollarDisplayTypes),
       lotes: data.lotes ?? [],
-      banners: data.banners ?? [],
+      banners: normalizeBanners(data.banners),
       noticias: data.noticias ?? [],
       siteName: data.siteName ?? "Desde el Campo 2026",
       logo: data.logo ?? null,
