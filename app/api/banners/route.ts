@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { saveFormDataFileToPublicUploads } from "../_utils/upload";
-import { createId } from "../_utils/store";
+import { createId, type AdAsset } from "../_utils/store";
 import {
   readPublicidad,
   addPublicidadAsset,
+  updatePublicidadAsset,
   deletePublicidadAsset,
 } from "../_utils/publicidad";
 
 export const runtime = "nodejs";
+
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
+const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
 
 type AdType = "banner" | "video";
 
@@ -16,8 +21,12 @@ function str(formData: FormData, key: string) {
   return typeof v === "string" ? v : "";
 }
 
-function isAdType(value: string): value is AdType {
-  return value === "banner" || value === "video";
+function detectAdType(contentType: string): { type: AdType; esVideo: boolean } {
+  const isVideo = ALLOWED_VIDEO_TYPES.includes(contentType);
+  return {
+    type: isVideo ? "video" : "banner",
+    esVideo: isVideo,
+  };
 }
 
 export async function GET() {
@@ -29,18 +38,10 @@ export async function POST(request: Request) {
   try {
     const formData = await request.formData();
 
-    const typeRaw = str(formData, "type").trim();
-    const destino = str(formData, "destino").trim();
+    const titulo = str(formData, "titulo").trim() || undefined;
+    const destino = str(formData, "destino").trim() || undefined;
     const file = formData.get("file");
 
-    const type: AdType = isAdType(typeRaw) ? typeRaw : "banner";
-
-    if (!destino) {
-      return NextResponse.json(
-        { ok: false, error: "El campo 'destino' (link destino) es obligatorio." },
-        { status: 400 },
-      );
-    }
     if (!(file instanceof File)) {
       return NextResponse.json(
         { ok: false, error: "Falta el archivo. Enviá multipart/form-data con campo 'file'." },
@@ -48,15 +49,33 @@ export async function POST(request: Request) {
       );
     }
 
+    const contentType = file.type || "";
+
+    if (!ALLOWED_TYPES.includes(contentType)) {
+      return NextResponse.json(
+        { ok: false, error: "Formato no permitido. Solo se aceptan JPG, PNG, WebP, MP4 o WebM." },
+        { status: 400 },
+      );
+    }
+
+    const { type, esVideo } = detectAdType(contentType);
+
     const saved = await saveFormDataFileToPublicUploads(file, type);
 
-    const newAsset = {
+    const newAsset: AdAsset = {
       id: createId(),
       type,
       destino,
       fileUrl: saved.url,
       fileName: saved.filename,
-      contentType: saved.contentType,
+      contentType,
+      esVideo,
+      activo: true,
+      orden: 0,
+      slot: "sidebar",
+      fileSize: saved.bytes,
+      titulo,
+      updatedAt: new Date().toISOString(),
     };
 
     await addPublicidadAsset(newAsset);
@@ -66,6 +85,56 @@ export async function POST(request: Request) {
       asset: newAsset,
       fileUrl: saved.url,
     });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "Error inesperado" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ ok: false, error: "Falta el id de la publicidad." }, { status: 400 });
+    }
+
+    const formData = await request.formData();
+    const patch: Parameters<typeof updatePublicidadAsset>[1] = {};
+
+    if (formData.has("titulo")) {
+      patch.titulo = str(formData, "titulo").trim() || undefined;
+    }
+
+    if (formData.has("destino")) {
+      patch.destino = str(formData, "destino").trim();
+    }
+
+    if (formData.has("activo")) {
+      patch.activo = str(formData, "activo").trim() === "true";
+    }
+
+    if (formData.has("orden")) {
+      const orden = Number(str(formData, "orden"));
+      if (Number.isFinite(orden)) {
+        patch.orden = orden;
+      }
+    }
+
+    if (formData.has("slot")) {
+      patch.slot = str(formData, "slot").trim() || "sidebar";
+    }
+
+    const updated = await updatePublicidadAsset(id, patch);
+
+    if (!updated) {
+      return NextResponse.json({ ok: false, error: "Publicidad no encontrada." }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true, asset: updated });
   } catch (error) {
     return NextResponse.json(
       { ok: false, error: error instanceof Error ? error.message : "Error inesperado" },

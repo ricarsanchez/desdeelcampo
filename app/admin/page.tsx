@@ -45,13 +45,20 @@ type Lote = {
   imageUrl?: string;
 };
 
-type AdAssetType = "banner" | "video";
 type AdAsset = {
   id: string;
-  type: AdAssetType;
+  type: "banner" | "video";
   fileName: string;
   fileUrl?: string;
-  destino: string;
+  destino?: string;
+  contentType?: string;
+  esVideo?: boolean;
+  titulo?: string;
+  activo?: boolean;
+  orden?: number;
+  slot?: string;
+  fileSize?: number;
+  updatedAt?: string;
 };
 
 function uid() {
@@ -86,9 +93,9 @@ export default function AdminPage() {
 
   // Publicidad
   const [ads, setAds] = useState<AdAsset[]>([]);
-  const [adType, setAdType] = useState<AdAssetType>("banner");
   const [adFile, setAdFile] = useState<File | null>(null);
   const [adPreviewUrl, setAdPreviewUrl] = useState<string | null>(null);
+  const [adTitulo, setAdTitulo] = useState("");
   const [adDestino, setAdDestino] = useState("");
   const [isPublishingAd, setIsPublishingAd] = useState(false);
   const [adApiError, setAdApiError] = useState<string | null>(null);
@@ -200,7 +207,7 @@ export default function AdminPage() {
         }
 
         setLotes(Array.isArray(lotesData.lotes) ? lotesData.lotes : []);
-        setAds(Array.isArray(bannersData.banners) ? bannersData.banners : []);
+        setAds(Array.isArray(bannersData.banners) ? (bannersData.banners as AdAsset[]) : []);
         setMarketPrices(pricesData.prices ?? null);
         setNews(Array.isArray(newsData.noticias) ? newsData.noticias : []);
         const savedNumber = configData.config?.whatsappNumber ?? "";
@@ -253,10 +260,9 @@ export default function AdminPage() {
 
   const adErrors = useMemo(() => {
     const errs: string[] = [];
-    if (!adFile) errs.push("Debes seleccionar un archivo (banner o video).");
-    if (!adDestino.trim()) errs.push("El link destino es obligatorio.");
+    if (!adFile) errs.push("Debes seleccionar un archivo (imagen o video).");
     return errs;
-  }, [adDestino, adFile]);
+  }, [adFile]);
 
   const newsErrors = useMemo(() => {
     const errs: string[] = [];
@@ -415,14 +421,20 @@ export default function AdminPage() {
     setIsPublishingAd(true);
     try {
       const fd = new FormData();
-      fd.append("type", adType);
-      fd.append("destino", adDestino.trim());
+      const tituloTrim = adTitulo.trim();
+      if (tituloTrim) {
+        fd.append("titulo", tituloTrim);
+      }
+      const destinoTrim = adDestino.trim();
+      if (destinoTrim) {
+        fd.append("destino", destinoTrim);
+      }
       fd.append("file", adFile);
 
       const res = await fetch("/api/banners", { method: "POST", body: fd });
       const data = (await res.json()) as {
         ok?: boolean;
-        asset?: { type: AdAssetType; destino: string; fileUrl?: string; filename?: string };
+        asset?: AdAsset;
         error?: string;
       };
       if (!res.ok || !data.ok || !data.asset) {
@@ -432,14 +444,18 @@ export default function AdminPage() {
       const nuevo: AdAsset = {
         id: uid(),
         type: data.asset.type,
-        fileName: data.asset.filename ?? adFile.name,
+        fileName: data.asset.fileName ?? adFile.name,
         fileUrl: data.asset.fileUrl,
         destino: data.asset.destino,
+        contentType: data.asset.contentType,
+        esVideo: data.asset.esVideo,
+        titulo: data.asset.titulo,
+        activo: true,
       };
       setAds((prev) => [nuevo, ...prev]);
       setAdFile(null);
+      setAdTitulo("");
       setAdDestino("");
-      setAdType("banner");
     } catch (e) {
       setAdApiError(e instanceof Error ? e.message : "No se pudo publicar la publicidad.");
     } finally {
@@ -580,11 +596,11 @@ export default function AdminPage() {
             {tab === "publicidad" && (
               <AdminSection title="Publicidad" description="Subí banners o videos con link destino.">
                 <PublicidadForm
-                  adType={adType}
-                  setAdType={setAdType}
                   adFile={adFile}
                   setAdFile={setAdFile}
                   adPreviewUrl={adPreviewUrl}
+                  adTitulo={adTitulo}
+                  setAdTitulo={setAdTitulo}
                   adDestino={adDestino}
                   setAdDestino={setAdDestino}
                   adErrors={adErrors}

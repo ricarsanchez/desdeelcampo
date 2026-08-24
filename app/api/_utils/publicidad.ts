@@ -100,6 +100,59 @@ export async function addPublicidadAsset(asset: AdAsset): Promise<void> {
   });
 }
 
+export async function updatePublicidadAsset(
+  id: string,
+  patch: Partial<Pick<AdAsset, "titulo" | "destino" | "activo" | "orden" | "slot">>,
+): Promise<AdAsset | null> {
+  const supabase = getSupabaseServer();
+
+  if (supabase) {
+    const { data: existing, error: fetchError } = await supabase
+      .from("publicidad")
+      .select("*")
+      .eq("id", id)
+      .single();
+
+    if (fetchError || !existing) {
+      console.error("Error buscando publicidad en Supabase:", fetchError?.message);
+      return null;
+    }
+
+    const rowUpdate: Record<string, unknown> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (patch.titulo !== undefined) rowUpdate.titulo = patch.titulo ?? null;
+    if (patch.destino !== undefined) rowUpdate.destino = patch.destino ?? null;
+    if (patch.activo !== undefined) rowUpdate.activo = patch.activo;
+    if (patch.orden !== undefined) rowUpdate.orden = patch.orden ?? 0;
+    if (patch.slot !== undefined) rowUpdate.slot = patch.slot ?? "sidebar";
+
+    const { error } = await supabase.from("publicidad").update(rowUpdate).eq("id", id);
+
+    if (!error) {
+      const { data } = await supabase.from("publicidad").select("*").eq("id", id).single();
+      return data ? rowToAsset(data as PublicidadRow) : null;
+    }
+
+    console.error("Error actualizando publicidad en Supabase:", error.message);
+  }
+
+  const store = await readStoreData();
+  const index = store.banners.findIndex((b) => b.id === id);
+  if (index === -1) return null;
+
+  const updated: AdAsset = {
+    ...store.banners[index],
+    ...patch,
+    updatedAt: new Date().toISOString(),
+  };
+
+  store.banners[index] = updated;
+  await writeStoreData(store);
+  return updated;
+}
+
 export async function deletePublicidadAsset(id: string): Promise<boolean> {
   const supabase = getSupabaseServer();
 

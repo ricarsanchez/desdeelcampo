@@ -7,15 +7,23 @@ type AdAsset = {
   type: AdAssetType;
   fileName: string;
   fileUrl?: string;
-  destino: string;
+  destino?: string;
+  contentType?: string;
+  esVideo?: boolean;
+  titulo?: string;
+  activo?: boolean;
+  orden?: number;
+  slot?: string;
+  fileSize?: number;
+  updatedAt?: string;
 };
 
 type PublicidadFormProps = {
-  adType: AdAssetType;
-  setAdType: (value: AdAssetType) => void;
   adFile: File | null;
   setAdFile: (file: File | null) => void;
   adPreviewUrl: string | null;
+  adTitulo: string;
+  setAdTitulo: (value: string) => void;
   adDestino: string;
   setAdDestino: (value: string) => void;
   adErrors: string[];
@@ -26,12 +34,14 @@ type PublicidadFormProps = {
   ads: AdAsset[];
 };
 
+const FILE_ACCEPT = "image/jpeg,image/png,image/webp,video/mp4,video/webm";
+
 export function PublicidadForm({
-  adType,
-  setAdType,
   adFile,
   setAdFile,
   adPreviewUrl,
+  adTitulo,
+  setAdTitulo,
   adDestino,
   setAdDestino,
   adErrors,
@@ -41,56 +51,69 @@ export function PublicidadForm({
   isPublishingAd,
   ads,
 }: PublicidadFormProps) {
+  const previewIsVideo = adFile?.type.startsWith("video/") ?? false;
+
   return (
     <>
-      <div className="grid gap-4 md:grid-cols-2">
-        <div>
-          <label className="block text-sm font-semibold text-slate-800">Tipo</label>
-          <select
-            value={adType}
-            onChange={(e) => setAdType(e.target.value as AdAssetType)}
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
-            disabled={isPublishingAd}
-          >
-            <option value="banner">Banner</option>
-            <option value="video">Video</option>
-          </select>
-        </div>
+      <div>
+        <label className="block text-sm font-semibold text-slate-800">Link destino (opcional)</label>
+        <input
+          type="url"
+          value={adDestino}
+          onChange={(e) => setAdDestino(e.target.value)}
+          className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+          placeholder="https://..."
+          disabled={isPublishingAd}
+        />
+      </div>
 
-        <div>
-          <label className="block text-sm font-semibold text-slate-800">Link destino</label>
-          <input
-            type="url"
-            value={adDestino}
-            onChange={(e) => setAdDestino(e.target.value)}
-            className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
-            placeholder="https://..."
-            disabled={isPublishingAd}
-          />
-        </div>
+      <div className="mt-4">
+        <label className="block text-sm font-semibold text-slate-800">Título (opcional)</label>
+        <input
+          type="text"
+          value={adTitulo}
+          onChange={(e) => setAdTitulo(e.target.value)}
+          className="mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+          placeholder="Ej: Auspiciante principal"
+          disabled={isPublishingAd}
+        />
+        <p className="mt-2 text-xs text-slate-500">
+          Solo se muestra en la web pública si se completa.
+        </p>
       </div>
 
       <div className="mt-4">
         <label className="block text-sm font-semibold text-slate-800">Archivo</label>
         <input
           type="file"
-          accept={adType === "banner" ? "image/*" : "video/*"}
+          accept={FILE_ACCEPT}
           onChange={(e) => setAdFile(e.target.files?.[0] ?? null)}
           className="mt-2 block w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-900 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-white hover:file:bg-slate-800"
           disabled={isPublishingAd}
         />
-        {adPreviewUrl && adType === "banner" && (
+        <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
+          <p className="font-semibold text-slate-700">Medidas sugeridas</p>
+          <ul className="mt-1 list-disc space-y-0.5 pl-4">
+            <li>Auspiciante lateral: 600 x 300 px o 1200 x 600 px</li>
+            <li>Banner horizontal: 1200 x 300 px</li>
+            <li>Banner cuadrado: 600 x 600 px</li>
+            <li>Banner vertical: 300 x 600 px</li>
+          </ul>
+          <p className="mt-2 font-semibold text-slate-700">Formatos permitidos</p>
+          <p>JPG, PNG, WebP, MP4 o WebM. El sistema detectará automáticamente el tipo.</p>
+        </div>
+        {adPreviewUrl && !previewIsVideo && (
           <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-            <p className="text-xs font-medium text-slate-600">Vista previa (banner)</p>
+            <p className="text-xs font-medium text-slate-600">Vista previa (imagen)</p>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={adPreviewUrl}
-              alt="Vista previa del banner"
+              alt="Vista previa de la imagen"
               className="mt-2 h-44 w-full rounded-xl bg-white object-cover ring-1 ring-slate-200"
             />
           </div>
         )}
-        {adPreviewUrl && adType === "video" && (
+        {adPreviewUrl && previewIsVideo && (
           <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
             <p className="text-xs font-medium text-slate-600">Vista previa (video)</p>
             <video
@@ -151,18 +174,22 @@ export function PublicidadForm({
               >
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-slate-900">
-                    {ad.type === "banner" ? "Banner" : "Video"} • {ad.fileName}
+                    {(ad.esVideo ?? ad.type === "video") ? "Video" : "Banner"} • {ad.fileName}
                   </p>
-                  <a
-                    href={ad.destino}
-                    className="mt-1 block truncate text-sm text-emerald-700 underline underline-offset-2"
-                  >
-                    {ad.destino}
-                  </a>
+                  {ad.destino ? (
+                    <a
+                      href={ad.destino}
+                      className="mt-1 block truncate text-sm text-emerald-700 underline underline-offset-2"
+                    >
+                      {ad.destino}
+                    </a>
+                  ) : (
+                    <p className="mt-1 truncate text-sm text-slate-500">Sin link destino</p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-full md:w-56">
-                    {ad.type === "banner" && ad.fileUrl && (
+                    {!(ad.esVideo ?? ad.type === "video") && ad.fileUrl && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
                         src={ad.fileUrl}
@@ -170,7 +197,7 @@ export function PublicidadForm({
                         className="h-20 w-full rounded-xl object-cover ring-1 ring-slate-200"
                       />
                     )}
-                    {ad.type === "video" && ad.fileUrl && (
+                    {(ad.esVideo ?? ad.type === "video") && ad.fileUrl && (
                       <video
                         src={ad.fileUrl}
                         className="h-20 w-full rounded-xl bg-black object-contain ring-1 ring-slate-200"

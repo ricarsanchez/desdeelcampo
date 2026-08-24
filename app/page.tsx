@@ -299,6 +299,64 @@ function AdSpaceWidget() {
 }
 
 // ─────────────────────────────────────────────────────────────
+// Sponsor Ad Card
+// ─────────────────────────────────────────────────────────────
+function SponsorAdCard({ banner }: { banner: AdAsset }) {
+  const isVideo = banner.esVideo ?? banner.type === "video";
+  const className =
+    "block rounded-2xl overflow-hidden border border-stone-200 bg-slate-50 shadow-sm hover:border-emerald-300 transition-colors";
+
+  const media = (
+    <div className="h-20 w-full overflow-hidden rounded-t-2xl bg-stone-100">
+      {isVideo ? (
+        <video
+          src={banner.fileUrl}
+          className="h-full w-full bg-black object-cover"
+          muted
+          playsInline
+        />
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={banner.fileUrl}
+          alt={banner.titulo ?? "Publicidad"}
+          className="h-full w-full object-cover"
+        />
+      )}
+    </div>
+  );
+
+  const caption = banner.titulo ? (
+    <div className="p-3">
+      <p className="text-sm font-medium text-stone-700 truncate">
+        {banner.titulo}
+      </p>
+    </div>
+  ) : null;
+
+  if (banner.destino) {
+    return (
+      <a
+        href={banner.destino}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+      >
+        {media}
+        {caption}
+      </a>
+    );
+  }
+
+  return (
+    <div className={className}>
+      {media}
+      {caption}
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────
 // Sponsors Widget
 // ─────────────────────────────────────────────────────────────
 function SponsorsWidget({ banners }: { banners: AdAsset[] }) {
@@ -327,35 +385,7 @@ function SponsorsWidget({ banners }: { banners: AdAsset[] }) {
       ) : (
         <div className="space-y-3">
           {banners.slice(0, 4).map((banner) => (
-            <a
-              key={banner.id}
-              href={banner.destino}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-2xl overflow-hidden border border-stone-200 bg-slate-50 shadow-sm hover:border-emerald-300 transition-colors"
-            >
-              {banner.type === "banner" ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={banner.fileUrl}
-                  alt={banner.fileName}
-                  className="h-20 w-full object-cover"
-                />
-              ) : (
-                <video
-                  src={banner.fileUrl}
-                  className="h-20 w-full bg-black object-cover"
-                  muted
-                  playsInline
-                />
-              )}
-              <div className="p-3">
-                <p className="text-xs font-semibold text-stone-500">{banner.type}</p>
-                <p className="text-sm font-medium text-stone-700 truncate">
-                  {banner.fileName}
-                </p>
-              </div>
-            </a>
+            <SponsorAdCard key={banner.id} banner={banner} />
           ))}
         </div>
       )}
