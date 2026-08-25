@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
-import { saveFormDataFileToPublicUploads } from "../_utils/upload";
+import { NextResponse, type NextRequest } from "next/server";
+import { ADMIN_COOKIE_NAME, isAdminCookie } from "@/lib/auth";
 import { createId, type AdAsset } from "../_utils/store";
+import { deletePublicidadFile, savePublicidadFile } from "../_utils/publicidadStorage";
 import {
   readPublicidad,
   addPublicidadAsset,
@@ -29,13 +30,26 @@ function detectAdType(contentType: string): { type: AdType; esVideo: boolean } {
   };
 }
 
+function requireAdmin(request: NextRequest) {
+  const value = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
+  if (isAdminCookie(value)) return null;
+
+  return NextResponse.json(
+    { ok: false, error: "No autorizado." },
+    { status: 401 },
+  );
+}
+
 export async function GET() {
   const banners = await readPublicidad();
   return NextResponse.json({ ok: true, banners });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const unauthorized = requireAdmin(request);
+    if (unauthorized) return unauthorized;
+
     const formData = await request.formData();
 
     const titulo = str(formData, "titulo").trim() || undefined;
@@ -60,7 +74,7 @@ export async function POST(request: Request) {
 
     const { type, esVideo } = detectAdType(contentType);
 
-    const saved = await saveFormDataFileToPublicUploads(file, type);
+    const saved = await savePublicidadFile(file, type);
 
     const newAsset: AdAsset = {
       id: createId(),
@@ -93,8 +107,11 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
+    const unauthorized = requireAdmin(request);
+    if (unauthorized) return unauthorized;
+
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
 
@@ -143,17 +160,31 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    const unauthorized = requireAdmin(request);
+    if (unauthorized) return unauthorized;
+
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     if (!id) {
       return NextResponse.json({ ok: false, error: "Falta el id del banner." }, { status: 400 });
     }
 
+    const existing = (await readPublicidad()).find((asset) => asset.id === id);
     const deleted = await deletePublicidadAsset(id);
     if (!deleted) {
       return NextResponse.json({ ok: false, error: "Banner no encontrado." }, { status: 404 });
+    }
+
+    if (existing?.fileUrl) {
+      try {
+        await deletePublicidadFile(existing.fileUrl);
+      } catch (storageError) {
+        console.error(
+          storageError instanceof Error ? storageError.message : "Error eliminando publicidad de Storage",
+        );
+      }
     }
 
     return NextResponse.json({ ok: true });
