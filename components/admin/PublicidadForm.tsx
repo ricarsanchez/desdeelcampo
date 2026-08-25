@@ -157,7 +157,7 @@ export function PublicidadForm({
           {isPublishingAd ? "Publicando..." : "Publicar publicidad"}
         </button>
         <p className="text-xs text-slate-500">
-          {isPublishingAd ? "Enviando a /api/banners…" : "Banner o video en /public/uploads."}
+          {isPublishingAd ? "Enviando a /api/banners…" : "Banner o video en Supabase Storage."}
         </p>
       </div>
 
