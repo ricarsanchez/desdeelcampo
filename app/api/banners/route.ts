@@ -16,10 +16,32 @@ const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
 const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
 
 type AdType = "banner" | "video";
+const ALLOWED_SLOTS = ["sidebar"] as const;
 
 function str(formData: FormData, key: string) {
   const v = formData.get(key);
   return typeof v === "string" ? v : "";
+}
+
+function parseSlot(formData: FormData) {
+  const slot = str(formData, "slot").trim() || "sidebar";
+  return ALLOWED_SLOTS.includes(slot as (typeof ALLOWED_SLOTS)[number]) ? slot : null;
+}
+
+function parseOrder(formData: FormData) {
+  const raw = str(formData, "orden").trim();
+  if (!raw) return 0;
+
+  const order = Number(raw);
+  return Number.isInteger(order) && order >= 0 ? order : null;
+}
+
+function parseActive(formData: FormData) {
+  const raw = str(formData, "activo").trim();
+  if (!raw) return true;
+  if (raw === "true") return true;
+  if (raw === "false") return false;
+  return null;
 }
 
 function detectAdType(contentType: string): { type: AdType; esVideo: boolean } {
@@ -54,7 +76,25 @@ export async function POST(request: NextRequest) {
 
     const titulo = str(formData, "titulo").trim() || undefined;
     const destino = str(formData, "destino").trim() || undefined;
+    const slot = parseSlot(formData);
+    const orden = parseOrder(formData);
+    const activo = parseActive(formData);
     const file = formData.get("file");
+
+    if (!slot) {
+      return NextResponse.json({ ok: false, error: "Ubicación de publicidad inválida." }, { status: 400 });
+    }
+
+    if (orden === null) {
+      return NextResponse.json(
+        { ok: false, error: "El orden debe ser un número entero mayor o igual a 0." },
+        { status: 400 },
+      );
+    }
+
+    if (activo === null) {
+      return NextResponse.json({ ok: false, error: "El estado activo es inválido." }, { status: 400 });
+    }
 
     if (!(file instanceof File)) {
       return NextResponse.json(
@@ -84,9 +124,9 @@ export async function POST(request: NextRequest) {
       fileName: saved.filename,
       contentType,
       esVideo,
-      activo: true,
-      orden: 0,
-      slot: "sidebar",
+      activo,
+      orden,
+      slot,
       fileSize: saved.bytes,
       titulo,
       updatedAt: new Date().toISOString(),
@@ -123,7 +163,7 @@ export async function PUT(request: NextRequest) {
     const patch: Parameters<typeof updatePublicidadAsset>[1] = {};
 
     if (formData.has("titulo")) {
-      patch.titulo = str(formData, "titulo").trim() || undefined;
+      patch.titulo = str(formData, "titulo").trim();
     }
 
     if (formData.has("destino")) {
@@ -131,18 +171,30 @@ export async function PUT(request: NextRequest) {
     }
 
     if (formData.has("activo")) {
-      patch.activo = str(formData, "activo").trim() === "true";
+      const activo = parseActive(formData);
+      if (activo === null) {
+        return NextResponse.json({ ok: false, error: "El estado activo es inválido." }, { status: 400 });
+      }
+      patch.activo = activo;
     }
 
     if (formData.has("orden")) {
-      const orden = Number(str(formData, "orden"));
-      if (Number.isFinite(orden)) {
-        patch.orden = orden;
+      const orden = parseOrder(formData);
+      if (orden === null) {
+        return NextResponse.json(
+          { ok: false, error: "El orden debe ser un número entero mayor o igual a 0." },
+          { status: 400 },
+        );
       }
+      patch.orden = orden;
     }
 
     if (formData.has("slot")) {
-      patch.slot = str(formData, "slot").trim() || "sidebar";
+      const slot = parseSlot(formData);
+      if (!slot) {
+        return NextResponse.json({ ok: false, error: "Ubicación de publicidad inválida." }, { status: 400 });
+      }
+      patch.slot = slot;
     }
 
     const updated = await updatePublicidadAsset(id, patch);

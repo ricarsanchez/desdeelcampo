@@ -12,7 +12,7 @@ import { fetchDollarRates, getSelectedDollarRates } from "./api/_utils/marketPri
 import { readStoreData, type Lote, type AdAsset } from "./api/_utils/store";
 import { readSiteConfig } from "./api/_utils/siteConfig";
 import { readPublicidad } from "./api/_utils/publicidad";
-import { readNewsArticles, type NewsArticle } from "../lib/news";
+import { readNewsArticles } from "../lib/news";
 import { NewsSection } from "../components/NewsSection";
 
 export const dynamic = "force-dynamic";
@@ -451,6 +451,9 @@ export default async function HomePage() {
   const quienesSomosContent = siteConfig?.quienesSomosContent || "";
   const sortedNews = [...noticias].sort((a, b) => b.date.localeCompare(a.date));
   const selectedDollarRates = getSelectedDollarRates(marketPrices, store.dollarDisplayTypes);
+  const sidebarBanners = banners
+    .filter((banner) => (banner.activo ?? true) && (banner.slot ?? "sidebar") === "sidebar")
+    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
   const tickerItems =
     selectedDollarRates.length > 0
       ? selectedDollarRates.map((item) => {
@@ -505,10 +508,10 @@ export default async function HomePage() {
 
           {/* ── RIGHT: Sidebar (25%) ── */}
           <aside className="w-full lg:w-1/4 shrink-0 space-y-5">
-            {banners && banners.length > 0 && <AdSpaceWidget />}
+            {sidebarBanners.length > 0 && <AdSpaceWidget />}
             <MarketPrices rates={selectedDollarRates} updatedAt={marketPrices.updatedAt} />
-            {banners && banners.length > 0 && (
-              <SponsorsWidget banners={banners} />
+            {sidebarBanners.length > 0 && (
+              <SponsorsWidget banners={sidebarBanners} />
             )}
             <QuickLinksWidget />
           </aside>

@@ -1,4 +1,4 @@
-import { getSupabaseServer } from "./supabaseServer";
+import { getSupabaseAdmin, getSupabaseServer } from "./supabaseServer";
 import { readStoreData, writeStoreData, type AdAsset } from "./store";
 
 type PublicidadRow = {
@@ -83,7 +83,7 @@ export async function readPublicidad(): Promise<AdAsset[]> {
 }
 
 export async function addPublicidadAsset(asset: AdAsset): Promise<void> {
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
 
   if (supabase) {
     const row = { ...assetToRow(asset), id: asset.id };
@@ -104,7 +104,7 @@ export async function updatePublicidadAsset(
   id: string,
   patch: Partial<Pick<AdAsset, "titulo" | "destino" | "activo" | "orden" | "slot">>,
 ): Promise<AdAsset | null> {
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
 
   if (supabase) {
     const { data: existing, error: fetchError } = await supabase
@@ -128,14 +128,19 @@ export async function updatePublicidadAsset(
     if (patch.orden !== undefined) rowUpdate.orden = patch.orden ?? 0;
     if (patch.slot !== undefined) rowUpdate.slot = patch.slot ?? "sidebar";
 
-    const { error } = await supabase.from("publicidad").update(rowUpdate).eq("id", id);
+    const { data, error } = await supabase
+      .from("publicidad")
+      .update(rowUpdate)
+      .eq("id", id)
+      .select("*")
+      .single();
 
-    if (!error) {
-      const { data } = await supabase.from("publicidad").select("*").eq("id", id).single();
-      return data ? rowToAsset(data as PublicidadRow) : null;
-    }
+    if (!error && data) return rowToAsset(data as PublicidadRow);
 
-    console.error("Error actualizando publicidad en Supabase:", error.message);
+    console.error(
+      "Error actualizando publicidad en Supabase:",
+      error?.message ?? "La actualización no devolvió la publicidad.",
+    );
   }
 
   const store = await readStoreData();
@@ -154,7 +159,7 @@ export async function updatePublicidadAsset(
 }
 
 export async function deletePublicidadAsset(id: string): Promise<boolean> {
-  const supabase = getSupabaseServer();
+  const supabase = getSupabaseAdmin();
 
   if (supabase) {
     const { error } = await supabase.from("publicidad").delete().eq("id", id);

@@ -61,6 +61,14 @@ type AdAsset = {
   updatedAt?: string;
 };
 
+type AdMetadataUpdate = {
+  titulo: string;
+  destino: string;
+  orden: number;
+  activo: boolean;
+  slot: "sidebar";
+};
+
 function uid() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 }
@@ -97,6 +105,8 @@ export default function AdminPage() {
   const [adPreviewUrl, setAdPreviewUrl] = useState<string | null>(null);
   const [adTitulo, setAdTitulo] = useState("");
   const [adDestino, setAdDestino] = useState("");
+  const [adOrden, setAdOrden] = useState("0");
+  const [adActivo, setAdActivo] = useState(true);
   const [isPublishingAd, setIsPublishingAd] = useState(false);
   const [adApiError, setAdApiError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -261,8 +271,12 @@ export default function AdminPage() {
   const adErrors = useMemo(() => {
     const errs: string[] = [];
     if (!adFile) errs.push("Debes seleccionar un archivo (imagen o video).");
+    const order = Number(adOrden);
+    if (!Number.isInteger(order) || order < 0) {
+      errs.push("El orden debe ser un número entero mayor o igual a 0.");
+    }
     return errs;
-  }, [adFile]);
+  }, [adFile, adOrden]);
 
   const newsErrors = useMemo(() => {
     const errs: string[] = [];
@@ -429,6 +443,9 @@ export default function AdminPage() {
       if (destinoTrim) {
         fd.append("destino", destinoTrim);
       }
+      fd.append("slot", "sidebar");
+      fd.append("orden", adOrden);
+      fd.append("activo", String(adActivo));
       fd.append("file", adFile);
 
       const res = await fetch("/api/banners", { method: "POST", body: fd });
@@ -441,25 +458,50 @@ export default function AdminPage() {
         throw new Error(data.error ?? `Error ${res.status}`);
       }
 
-      const nuevo: AdAsset = {
-        id: uid(),
-        type: data.asset.type,
-        fileName: data.asset.fileName ?? adFile.name,
-        fileUrl: data.asset.fileUrl,
-        destino: data.asset.destino,
-        contentType: data.asset.contentType,
-        esVideo: data.asset.esVideo,
-        titulo: data.asset.titulo,
-        activo: true,
-      };
+      const nuevo: AdAsset = data.asset;
       setAds((prev) => [nuevo, ...prev]);
       setAdFile(null);
       setAdTitulo("");
       setAdDestino("");
+      setAdOrden("0");
+      setAdActivo(true);
     } catch (e) {
       setAdApiError(e instanceof Error ? e.message : "No se pudo publicar la publicidad.");
     } finally {
       setIsPublishingAd(false);
+    }
+  }
+
+  async function onUpdateAd(id: string, update: AdMetadataUpdate) {
+    setAdApiError(null);
+
+    try {
+      const fd = new FormData();
+      fd.append("titulo", update.titulo.trim());
+      fd.append("destino", update.destino.trim());
+      fd.append("slot", update.slot);
+      fd.append("orden", String(update.orden));
+      fd.append("activo", String(update.activo));
+
+      const res = await fetch(`/api/banners?id=${encodeURIComponent(id)}`, {
+        method: "PUT",
+        body: fd,
+      });
+      const data = (await res.json()) as {
+        ok?: boolean;
+        asset?: AdAsset;
+        error?: string;
+      };
+
+      if (!res.ok || !data.ok || !data.asset) {
+        throw new Error(data.error ?? `Error ${res.status}`);
+      }
+
+      setAds((prev) => prev.map((item) => (item.id === id ? data.asset! : item)));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo actualizar la publicidad.";
+      setAdApiError(message);
+      throw error;
     }
   }
 
@@ -603,9 +645,14 @@ export default function AdminPage() {
                   setAdTitulo={setAdTitulo}
                   adDestino={adDestino}
                   setAdDestino={setAdDestino}
+                  adOrden={adOrden}
+                  setAdOrden={setAdOrden}
+                  adActivo={adActivo}
+                  setAdActivo={setAdActivo}
                   adErrors={adErrors}
                   adApiError={adApiError}
                   onPublishAd={onPublishAd}
+                  onUpdateAd={onUpdateAd}
                   onDeleteAd={onDeleteAd}
                   isPublishingAd={isPublishingAd}
                   ads={ads}
