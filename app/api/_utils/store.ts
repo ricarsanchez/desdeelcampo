@@ -1,10 +1,14 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import crypto from "node:crypto";
+import {
+  normalizePublicidadSlot,
+  type PublicidadSlotInput,
+} from "../../../lib/publicidadSlots";
 
 export type AdAssetType = "banner" | "video";
 
-export type AdSlot = "sidebar" | "horizontal" | "hero" | "footer";
+export type AdSlot = PublicidadSlotInput;
 
 export type AdAsset = {
   id: string;
@@ -16,7 +20,7 @@ export type AdAsset = {
   activo?: boolean;
   titulo?: string;
   orden?: number;
-  slot?: AdSlot | string;
+  slot?: AdSlot;
   esVideo?: boolean;
   width?: number;
   height?: number;
@@ -112,7 +116,7 @@ function normalizeBanners(value: unknown): AdAsset[] {
         activo: typeof item.activo === "boolean" ? item.activo : true,
         titulo: item.titulo !== undefined ? String(item.titulo) : undefined,
         orden: Number.isFinite(orden) ? orden : 0,
-        slot: String(item.slot ?? "sidebar"),
+        slot: normalizePublicidadSlot(item.slot),
         esVideo: typeof item.esVideo === "boolean" ? item.esVideo : type === "video",
         width: Number.isFinite(width) ? width : undefined,
         height: Number.isFinite(height) ? height : undefined,

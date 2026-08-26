@@ -1,5 +1,9 @@
 import { getSupabaseAdmin, getSupabaseServer } from "./supabaseServer";
 import { readStoreData, writeStoreData, type AdAsset } from "./store";
+import {
+  DEFAULT_PUBLICIDAD_SLOT,
+  normalizePublicidadSlot,
+} from "../../../lib/publicidadSlots";
 
 type PublicidadRow = {
   id: string;
@@ -33,7 +37,7 @@ function rowToAsset(row: PublicidadRow): AdAsset {
     activo: row.activo ?? true,
     titulo: row.titulo ?? undefined,
     orden: row.orden ?? 0,
-    slot: row.slot ?? "sidebar",
+    slot: normalizePublicidadSlot(row.slot),
     esVideo: row.es_video ?? type === "video",
     width: row.width ?? undefined,
     height: row.height ?? undefined,
@@ -52,7 +56,7 @@ function assetToRow(asset: AdAsset): Record<string, unknown> {
     activo: asset.activo ?? true,
     titulo: asset.titulo ?? null,
     orden: asset.orden ?? 0,
-    slot: asset.slot ?? "sidebar",
+    slot: normalizePublicidadSlot(asset.slot),
     es_video: asset.esVideo ?? asset.type === "video",
     width: asset.width ?? null,
     height: asset.height ?? null,
@@ -126,7 +130,9 @@ export async function updatePublicidadAsset(
     if (patch.destino !== undefined) rowUpdate.destino = patch.destino ?? null;
     if (patch.activo !== undefined) rowUpdate.activo = patch.activo;
     if (patch.orden !== undefined) rowUpdate.orden = patch.orden ?? 0;
-    if (patch.slot !== undefined) rowUpdate.slot = patch.slot ?? "sidebar";
+    if (patch.slot !== undefined) {
+      rowUpdate.slot = normalizePublicidadSlot(patch.slot ?? DEFAULT_PUBLICIDAD_SLOT);
+    }
 
     const { data, error } = await supabase
       .from("publicidad")

@@ -3,6 +3,11 @@ import { ADMIN_COOKIE_NAME, isAdminCookie } from "@/lib/auth";
 import { createId, type AdAsset } from "../_utils/store";
 import { deletePublicidadFile, savePublicidadFile } from "../_utils/publicidadStorage";
 import {
+  DEFAULT_PUBLICIDAD_SLOT,
+  isPublicidadSlotInput,
+  normalizePublicidadSlot,
+} from "../../../lib/publicidadSlots";
+import {
   readPublicidad,
   addPublicidadAsset,
   updatePublicidadAsset,
@@ -16,7 +21,6 @@ const ALLOWED_VIDEO_TYPES = ["video/mp4", "video/webm"];
 const ALLOWED_TYPES = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES];
 
 type AdType = "banner" | "video";
-const ALLOWED_SLOTS = ["sidebar"] as const;
 
 function str(formData: FormData, key: string) {
   const v = formData.get(key);
@@ -24,8 +28,9 @@ function str(formData: FormData, key: string) {
 }
 
 function parseSlot(formData: FormData) {
-  const slot = str(formData, "slot").trim() || "sidebar";
-  return ALLOWED_SLOTS.includes(slot as (typeof ALLOWED_SLOTS)[number]) ? slot : null;
+  const slot = str(formData, "slot").trim();
+  if (!slot) return DEFAULT_PUBLICIDAD_SLOT;
+  return isPublicidadSlotInput(slot) ? normalizePublicidadSlot(slot) : null;
 }
 
 function parseOrder(formData: FormData) {

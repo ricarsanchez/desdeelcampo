@@ -1,6 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import {
+  getPublicidadSlotLabel,
+  normalizePublicidadSlot,
+  PUBLICIDAD_SLOT_OPTIONS,
+  type PublicidadSlot,
+  type PublicidadSlotInput,
+} from "../../lib/publicidadSlots";
 
 type AdAssetType = "banner" | "video";
 
@@ -15,7 +22,7 @@ type AdAsset = {
   titulo?: string;
   activo?: boolean;
   orden?: number;
-  slot?: string;
+  slot?: PublicidadSlotInput;
   fileSize?: number;
   updatedAt?: string;
 };
@@ -25,7 +32,7 @@ type AdMetadataUpdate = {
   destino: string;
   orden: number;
   activo: boolean;
-  slot: "sidebar";
+  slot: PublicidadSlot;
 };
 
 type PublicidadFormProps = {
@@ -38,6 +45,8 @@ type PublicidadFormProps = {
   setAdDestino: (value: string) => void;
   adOrden: string;
   setAdOrden: (value: string) => void;
+  adSlot: PublicidadSlot;
+  setAdSlot: (value: PublicidadSlot) => void;
   adActivo: boolean;
   setAdActivo: (value: boolean) => void;
   adErrors: string[];
@@ -54,6 +63,7 @@ type EditDraft = {
   destino: string;
   orden: string;
   activo: boolean;
+  slot: PublicidadSlot;
 };
 
 const FILE_ACCEPT = "image/jpeg,image/png,image/webp,video/mp4,video/webm";
@@ -72,6 +82,8 @@ export function PublicidadForm({
   setAdDestino,
   adOrden,
   setAdOrden,
+  adSlot,
+  setAdSlot,
   adActivo,
   setAdActivo,
   adErrors,
@@ -88,10 +100,16 @@ export function PublicidadForm({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
 
-  const sortedAds = useMemo(
-    () => [...ads].sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0)),
-    [ads],
-  );
+  const sortedAds = useMemo(() => {
+    const slotIndex = (ad: AdAsset) =>
+      PUBLICIDAD_SLOT_OPTIONS.findIndex(
+        (option) => option.value === normalizePublicidadSlot(ad.slot),
+      );
+
+    return [...ads].sort(
+      (a, b) => slotIndex(a) - slotIndex(b) || (a.orden ?? 0) - (b.orden ?? 0),
+    );
+  }, [ads]);
 
   function startEditing(ad: AdAsset) {
     setEditingId(ad.id);
@@ -100,6 +118,7 @@ export function PublicidadForm({
       destino: ad.destino ?? "",
       orden: String(ad.orden ?? 0),
       activo: ad.activo ?? true,
+      slot: normalizePublicidadSlot(ad.slot),
     });
     setEditError(null);
   }
@@ -127,7 +146,7 @@ export function PublicidadForm({
         destino: editDraft.destino,
         orden: order,
         activo: editDraft.activo,
-        slot: "sidebar",
+        slot: editDraft.slot,
       });
       cancelEditing();
     } catch {
@@ -168,13 +187,18 @@ export function PublicidadForm({
         <div>
           <label className="block text-sm font-semibold text-slate-800">Ubicación</label>
           <select
-            value="sidebar"
-            disabled
-            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-700"
+            value={adSlot}
+            onChange={(event) => setAdSlot(event.target.value as PublicidadSlot)}
+            disabled={isPublishingAd}
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-emerald-200"
           >
-            <option value="sidebar">Auspiciante lateral</option>
+            {PUBLICIDAD_SLOT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
-          <p className="mt-2 text-xs text-slate-500">Las demás ubicaciones se habilitarán en la Etapa 4.</p>
+          <p className="mt-2 text-xs text-slate-500">Elegí dónde se mostrará en la página pública.</p>
         </div>
 
         <div>
@@ -218,7 +242,11 @@ export function PublicidadForm({
         <div className="mt-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-xs text-slate-600">
           <p className="font-semibold text-slate-700">Medidas sugeridas</p>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">
-            <li>Auspiciante lateral: 600 x 300 px o 1200 x 600 px</li>
+            {adSlot === "main_banner" ? (
+              <li>Banner central: 1200 x 300 px</li>
+            ) : (
+              <li>Publicidad lateral: 600 x 450 px u 800 x 600 px</li>
+            )}
           </ul>
           <p className="mt-2 font-semibold text-slate-700">Formatos permitidos</p>
           <p>JPG, PNG, WebP, MP4 o WebM. El sistema detectará automáticamente el tipo.</p>
@@ -351,11 +379,21 @@ export function PublicidadForm({
                             <div>
                               <label className="text-xs font-semibold text-slate-700">Ubicación</label>
                               <select
-                                value="sidebar"
-                                disabled
-                                className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 text-sm"
+                                value={editDraft.slot}
+                                onChange={(event) =>
+                                  setEditDraft({
+                                    ...editDraft,
+                                    slot: event.target.value as PublicidadSlot,
+                                  })
+                                }
+                                disabled={isSavingEdit}
+                                className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
                               >
-                                <option value="sidebar">Auspiciante lateral</option>
+                                {PUBLICIDAD_SLOT_OPTIONS.map((option) => (
+                                  <option key={option.value} value={option.value}>
+                                    {option.label}
+                                  </option>
+                                ))}
                               </select>
                             </div>
                             <div>
@@ -411,7 +449,7 @@ export function PublicidadForm({
                                 {ad.titulo || "Publicidad sin título"}
                               </h4>
                               <p className="mt-1 text-xs text-slate-500">
-                                {isVideo(ad) ? "Video" : "Imagen"} · Auspiciante lateral · Orden {ad.orden ?? 0}
+                                {isVideo(ad) ? "Video" : "Imagen"} · {getPublicidadSlotLabel(ad.slot)} · Orden {ad.orden ?? 0}
                               </p>
                             </div>
                             <span
