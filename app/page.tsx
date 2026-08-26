@@ -13,6 +13,10 @@ import { readSiteConfig } from "./api/_utils/siteConfig";
 import { readPublicidad } from "./api/_utils/publicidad";
 import { readNewsArticles } from "../lib/news";
 import { NewsSection } from "../components/NewsSection";
+import {
+  normalizePublicidadSlot,
+  type PublicidadSlot,
+} from "../lib/publicidadSlots";
 
 export const dynamic = "force-dynamic";
 
@@ -262,13 +266,23 @@ function LotCard({ lot, defaultWhatsappNumber }: { lot: Lote; defaultWhatsappNum
 // ─────────────────────────────────────────────────────────────
 // Sponsor Ad Card
 // ─────────────────────────────────────────────────────────────
-function SponsorAdCard({ banner }: { banner: AdAsset }) {
+function SponsorAdCard({
+  banner,
+  variant = "sidebar",
+}: {
+  banner: AdAsset;
+  variant?: "sidebar" | "main";
+}) {
   const isVideo = banner.esVideo ?? banner.type === "video";
   const className =
     "block overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-all hover:border-emerald-300 hover:shadow-md";
+  const mediaClassName =
+    variant === "main"
+      ? "aspect-[2/1] w-full overflow-hidden bg-stone-100 sm:aspect-[4/1]"
+      : "aspect-[4/3] w-full overflow-hidden bg-stone-100";
 
   const media = (
-    <div className="aspect-[4/3] w-full overflow-hidden bg-stone-100">
+    <div className={mediaClassName}>
       {isVideo ? (
         <video
           src={banner.fileUrl}
@@ -322,26 +336,69 @@ function SponsorAdCard({ banner }: { banner: AdAsset }) {
 // ─────────────────────────────────────────────────────────────
 // Sponsors Widget
 // ─────────────────────────────────────────────────────────────
-function SponsorsWidget({ banners }: { banners: AdAsset[] }) {
+function SponsorsWidget({
+  banners,
+  showHeading,
+  position,
+}: {
+  banners: AdAsset[];
+  showHeading: boolean;
+  position: "top" | "middle" | "bottom";
+}) {
+  const positionClassName =
+    position === "middle" ? "lg:my-auto" : position === "bottom" ? "lg:mt-auto" : "";
+
   return (
-    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-1 h-5 rounded-full bg-[#14532D]" />
-        <h3 className="font-bold text-stone-700 text-base">
-          Nuestros Auspiciantes
-        </h3>
-      </div>
+    <div
+      className={`rounded-2xl border border-stone-100 bg-white p-5 shadow-sm ${positionClassName}`}
+    >
+      {showHeading && (
+        <div className="mb-4 flex items-center gap-2">
+          <div className="h-5 w-1 rounded-full bg-[#14532D]" />
+          <h3 className="text-base font-bold text-stone-700">Nuestros Auspiciantes</h3>
+        </div>
+      )}
       <div className="space-y-4">
         {banners.map((banner) => (
           <SponsorAdCard key={banner.id} banner={banner} />
         ))}
       </div>
-      <a
-        href="#"
-        className="mt-4 block text-center text-xs font-semibold text-[#14532D] hover:underline"
-      >
-        → Ser auspiciante
-      </a>
+      {showHeading && (
+        <a
+          href="#"
+          className="mt-4 block text-center text-xs font-semibold text-[#14532D] hover:underline"
+        >
+          → Ser auspiciante
+        </a>
+      )}
+    </div>
+  );
+}
+
+function MainBannerZone({ banners }: { banners: AdAsset[] }) {
+  return (
+    <div className="my-5 space-y-4" aria-label="Publicidades centrales">
+      {banners.map((banner) => (
+        <SponsorAdCard key={banner.id} banner={banner} variant="main" />
+      ))}
+    </div>
+  );
+}
+
+function LotesGrid({
+  lotes,
+  whatsappNumber,
+  className = "",
+}: {
+  lotes: Lote[];
+  whatsappNumber: string;
+  className?: string;
+}) {
+  return (
+    <div className={`grid grid-cols-1 gap-5 sm:grid-cols-2 ${className}`}>
+      {lotes.map((lot) => (
+        <LotCard key={lot.id} lot={lot} defaultWhatsappNumber={whatsappNumber} />
+      ))}
     </div>
   );
 }
@@ -368,9 +425,23 @@ export default async function HomePage() {
   const quienesSomosContent = siteConfig?.quienesSomosContent || "";
   const sortedNews = [...noticias].sort((a, b) => b.date.localeCompare(a.date));
   const selectedDollarRates = getSelectedDollarRates(marketPrices, store.dollarDisplayTypes);
-  const sidebarBanners = banners
-    .filter((banner) => (banner.activo ?? true) && (banner.slot ?? "sidebar") === "sidebar")
-    .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+  const activeBanners = banners.filter((banner) => banner.activo ?? true);
+  const bannersForSlot = (slot: PublicidadSlot) =>
+    activeBanners
+      .filter((banner) => normalizePublicidadSlot(banner.slot) === slot)
+      .sort((a, b) => (a.orden ?? 0) - (b.orden ?? 0));
+  const sidebarTopBanners = bannersForSlot("sidebar_top");
+  const sidebarMiddleBanners = bannersForSlot("sidebar_middle");
+  const sidebarBottomBanners = bannersForSlot("sidebar_bottom");
+  const mainBanners = bannersForSlot("main_banner");
+  const sidebarZones = [
+    { id: "top", banners: sidebarTopBanners },
+    { id: "middle", banners: sidebarMiddleBanners },
+    { id: "bottom", banners: sidebarBottomBanners },
+  ] as const;
+  const visibleSidebarZones = sidebarZones.filter((zone) => zone.banners.length > 0);
+  const firstRowLotes = lotes.slice(0, 2);
+  const remainingLotes = lotes.slice(2);
   const tickerItems =
     selectedDollarRates.length > 0
       ? selectedDollarRates.map((item) => {
@@ -407,11 +478,17 @@ export default async function HomePage() {
                 {lotes.length} activos
               </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {lotes.map((lot) => (
-                <LotCard key={lot.id} lot={lot} defaultWhatsappNumber={whatsappNumber} />
-              ))}
-            </div>
+            {mainBanners.length > 0 ? (
+              <>
+                <LotesGrid lotes={firstRowLotes} whatsappNumber={whatsappNumber} />
+                <MainBannerZone banners={mainBanners} />
+                {remainingLotes.length > 0 && (
+                  <LotesGrid lotes={remainingLotes} whatsappNumber={whatsappNumber} />
+                )}
+              </>
+            ) : (
+              <LotesGrid lotes={lotes} whatsappNumber={whatsappNumber} />
+            )}
             <div className="mt-6 text-center">
               <a
                 href="#"
@@ -424,9 +501,18 @@ export default async function HomePage() {
           </section>
 
           {/* ── RIGHT: Sidebar (25%) ── */}
-          {sidebarBanners.length > 0 && (
-            <aside className="w-full shrink-0 lg:w-1/4">
-              <SponsorsWidget banners={sidebarBanners} />
+          {visibleSidebarZones.length > 0 && (
+            <aside className="flex w-full shrink-0 self-stretch lg:w-1/4">
+              <div className="flex w-full flex-1 flex-col gap-8">
+                {visibleSidebarZones.map((zone, index) => (
+                  <SponsorsWidget
+                    key={zone.id}
+                    banners={zone.banners}
+                    showHeading={index === 0}
+                    position={zone.id}
+                  />
+                ))}
+              </div>
             </aside>
           )}
         </div>

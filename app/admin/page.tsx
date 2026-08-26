@@ -9,6 +9,11 @@ import { PublicidadForm } from "../../components/admin/PublicidadForm";
 import { InstagramSyncCard } from "../../components/admin/InstagramSyncCard";
 import { ConfiguracionForm } from "../../components/admin/ConfiguracionForm";
 import type { NewsArticle } from "../../lib/news";
+import {
+  DEFAULT_PUBLICIDAD_SLOT,
+  type PublicidadSlot,
+  type PublicidadSlotInput,
+} from "../../lib/publicidadSlots";
 
 type TabKey = "lotes" | "publicidad" | "noticias" | "precios" | "instagram" | "configuracion";
 
@@ -56,7 +61,7 @@ type AdAsset = {
   titulo?: string;
   activo?: boolean;
   orden?: number;
-  slot?: string;
+  slot?: PublicidadSlotInput;
   fileSize?: number;
   updatedAt?: string;
 };
@@ -66,7 +71,7 @@ type AdMetadataUpdate = {
   destino: string;
   orden: number;
   activo: boolean;
-  slot: "sidebar";
+  slot: PublicidadSlot;
 };
 
 function uid() {
@@ -106,6 +111,7 @@ export default function AdminPage() {
   const [adTitulo, setAdTitulo] = useState("");
   const [adDestino, setAdDestino] = useState("");
   const [adOrden, setAdOrden] = useState("0");
+  const [adSlot, setAdSlot] = useState<PublicidadSlot>(DEFAULT_PUBLICIDAD_SLOT);
   const [adActivo, setAdActivo] = useState(true);
   const [isPublishingAd, setIsPublishingAd] = useState(false);
   const [adApiError, setAdApiError] = useState<string | null>(null);
@@ -443,7 +449,7 @@ export default function AdminPage() {
       if (destinoTrim) {
         fd.append("destino", destinoTrim);
       }
-      fd.append("slot", "sidebar");
+      fd.append("slot", adSlot);
       fd.append("orden", adOrden);
       fd.append("activo", String(adActivo));
       fd.append("file", adFile);
@@ -464,6 +470,7 @@ export default function AdminPage() {
       setAdTitulo("");
       setAdDestino("");
       setAdOrden("0");
+      setAdSlot(DEFAULT_PUBLICIDAD_SLOT);
       setAdActivo(true);
     } catch (e) {
       setAdApiError(e instanceof Error ? e.message : "No se pudo publicar la publicidad.");
@@ -647,6 +654,8 @@ export default function AdminPage() {
                   setAdDestino={setAdDestino}
                   adOrden={adOrden}
                   setAdOrden={setAdOrden}
+                  adSlot={adSlot}
+                  setAdSlot={setAdSlot}
                   adActivo={adActivo}
                   setAdActivo={setAdActivo}
                   adErrors={adErrors}
