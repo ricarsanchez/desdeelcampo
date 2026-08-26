@@ -6,7 +6,6 @@ import {
   Eye,
   Info,
 } from "lucide-react";
-import MarketPrices from "../components/MarketPrices";
 import InstagramWebhookEventsList from "../components/InstagramWebhookEventsList";
 import { fetchDollarRates, getSelectedDollarRates } from "./api/_utils/marketPrices";
 import { readStoreData, type Lote, type AdAsset } from "./api/_utils/store";
@@ -261,59 +260,23 @@ function LotCard({ lot, defaultWhatsappNumber }: { lot: Lote; defaultWhatsappNum
 }
 
 // ─────────────────────────────────────────────────────────────
-// Ad Space Widget
-// ─────────────────────────────────────────────────────────────
-function AdSpaceWidget() {
-  const adSlots = [
-    { id: "leaderboard", label: "Banner Horizontal", size: "1200 x 300", className: "aspect-[4/1] min-h-[84px]" },
-    { id: "square", label: "Banner Cuadrado", size: "600 x 600", className: "aspect-square min-h-[140px]" },
-    { id: "vertical", label: "Banner Vertical", size: "300 x 600", className: "aspect-[1/2] min-h-[180px]" },
-  ];
-
-  return (
-    <section className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="w-1 h-5 rounded-full bg-[#14532D]" />
-        <h3 className="font-bold text-stone-700 text-base">Espacio Publicitario</h3>
-      </div>
-      <p className="text-xs text-stone-500 mb-4">
-        Area preparada para banners o imagenes de distintos formatos.
-      </p>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
-        {adSlots.map((slot) => (
-          <div
-            key={slot.id}
-            id={`ad-slot-${slot.id}`}
-            className={`rounded-xl border-2 border-dashed border-stone-300 bg-stone-50/80 ${slot.className} flex items-center justify-center text-center px-3`}
-          >
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{slot.label}</p>
-              <p className="text-[11px] text-stone-400 mt-1">{slot.size}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
 // Sponsor Ad Card
 // ─────────────────────────────────────────────────────────────
 function SponsorAdCard({ banner }: { banner: AdAsset }) {
   const isVideo = banner.esVideo ?? banner.type === "video";
   const className =
-    "block rounded-2xl overflow-hidden border border-stone-200 bg-slate-50 shadow-sm hover:border-emerald-300 transition-colors";
+    "block overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-all hover:border-emerald-300 hover:shadow-md";
 
   const media = (
-    <div className="h-20 w-full overflow-hidden rounded-t-2xl bg-stone-100">
+    <div className="aspect-[4/3] w-full overflow-hidden bg-stone-100">
       {isVideo ? (
         <video
           src={banner.fileUrl}
           className="h-full w-full bg-black object-cover"
+          controls
           muted
           playsInline
+          preload="metadata"
         />
       ) : (
         // eslint-disable-next-line @next/next/no-img-element
@@ -368,63 +331,17 @@ function SponsorsWidget({ banners }: { banners: AdAsset[] }) {
           Nuestros Auspiciantes
         </h3>
       </div>
-      {banners.length === 0 ? (
-        <div className="grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map((i) => (
-            <div
-              key={i}
-              id={`sponsor-slot-${i}`}
-              className="sponsor-slot rounded-xl h-20 flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
-            >
-              <span className="text-slate-400 text-xs font-medium text-center px-2">
-                Espacio Publicitario
-              </span>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="space-y-3">
-          {banners.slice(0, 4).map((banner) => (
-            <SponsorAdCard key={banner.id} banner={banner} />
-          ))}
-        </div>
-      )}
+      <div className="space-y-4">
+        {banners.map((banner) => (
+          <SponsorAdCard key={banner.id} banner={banner} />
+        ))}
+      </div>
       <a
         href="#"
         className="mt-4 block text-center text-xs font-semibold text-[#14532D] hover:underline"
       >
         → Ser auspiciante
       </a>
-    </div>
-  );
-}
-
-// ─────────────────────────────────────────────────────────────
-// Quick Links Widget
-// ─────────────────────────────────────────────────────────────
-function QuickLinksWidget() {
-  const links = [
-    "📋 Ver todos los remates",
-    "📰 Últimas noticias",
-    "📞 Contactar corredor",
-  ];
-  return (
-    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-1 h-5 rounded-full bg-[#451A03]" />
-        <h3 className="font-bold text-stone-700 text-base">Accesos Rápidos</h3>
-      </div>
-      <div className="space-y-2">
-        {links.map((l) => (
-          <a
-            key={l}
-            href="#"
-            className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-stone-50 hover:bg-green-50 hover:text-green-800 transition-colors text-sm text-stone-700 font-medium"
-          >
-            {l}
-          </a>
-        ))}
-      </div>
     </div>
   );
 }
@@ -507,14 +424,11 @@ export default async function HomePage() {
           </section>
 
           {/* ── RIGHT: Sidebar (25%) ── */}
-          <aside className="w-full lg:w-1/4 shrink-0 space-y-5">
-            {sidebarBanners.length > 0 && <AdSpaceWidget />}
-            <MarketPrices rates={selectedDollarRates} updatedAt={marketPrices.updatedAt} />
-            {sidebarBanners.length > 0 && (
+          {sidebarBanners.length > 0 && (
+            <aside className="w-full shrink-0 lg:w-1/4">
               <SponsorsWidget banners={sidebarBanners} />
-            )}
-            <QuickLinksWidget />
-          </aside>
+            </aside>
+          )}
         </div>
 
         <NewsSection news={sortedNews} />
