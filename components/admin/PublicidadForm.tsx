@@ -250,6 +250,8 @@ export function PublicidadForm({
           </ul>
           <p className="mt-2 font-semibold text-slate-700">Formatos permitidos</p>
           <p>JPG, PNG, WebP, MP4 o WebM. El sistema detectará automáticamente el tipo.</p>
+          <p className="mt-2 font-semibold text-slate-700">Tamaño máximo temporal</p>
+          <p>4 MB para imágenes y videos.</p>
         </div>
         {adPreviewUrl && !previewIsVideo && (
           <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">

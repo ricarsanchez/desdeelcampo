@@ -8,6 +8,10 @@ import {
   normalizePublicidadSlot,
 } from "../../../lib/publicidadSlots";
 import {
+  MAX_PUBLICIDAD_FILE_BYTES,
+  PUBLICIDAD_FILE_TOO_LARGE_ERROR,
+} from "../../../lib/publicidadUpload";
+import {
   readPublicidad,
   addPublicidadAsset,
   updatePublicidadAsset,
@@ -104,6 +108,13 @@ export async function POST(request: NextRequest) {
     if (!(file instanceof File)) {
       return NextResponse.json(
         { ok: false, error: "Falta el archivo. Enviá multipart/form-data con campo 'file'." },
+        { status: 400 },
+      );
+    }
+
+    if (file.size > MAX_PUBLICIDAD_FILE_BYTES) {
+      return NextResponse.json(
+        { ok: false, error: PUBLICIDAD_FILE_TOO_LARGE_ERROR },
         { status: 400 },
       );
     }

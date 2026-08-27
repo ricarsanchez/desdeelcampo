@@ -14,6 +14,12 @@ import {
   type PublicidadSlot,
   type PublicidadSlotInput,
 } from "../../lib/publicidadSlots";
+import {
+  MAX_PUBLICIDAD_FILE_BYTES,
+  PUBLICIDAD_FILE_TOO_LARGE_ERROR,
+  PUBLICIDAD_UPLOAD_FALLBACK_ERROR,
+  readPublicidadUploadJson,
+} from "../../lib/publicidadUpload";
 
 type TabKey = "lotes" | "publicidad" | "noticias" | "precios" | "instagram" | "configuracion";
 
@@ -277,6 +283,9 @@ export default function AdminPage() {
   const adErrors = useMemo(() => {
     const errs: string[] = [];
     if (!adFile) errs.push("Debes seleccionar un archivo (imagen o video).");
+    if (adFile && adFile.size > MAX_PUBLICIDAD_FILE_BYTES) {
+      errs.push(PUBLICIDAD_FILE_TOO_LARGE_ERROR);
+    }
     const order = Number(adOrden);
     if (!Number.isInteger(order) || order < 0) {
       errs.push("El orden debe ser un número entero mayor o igual a 0.");
@@ -454,12 +463,18 @@ export default function AdminPage() {
       fd.append("activo", String(adActivo));
       fd.append("file", adFile);
 
-      const res = await fetch("/api/banners", { method: "POST", body: fd });
-      const data = (await res.json()) as {
+      let res: Response;
+      try {
+        res = await fetch("/api/banners", { method: "POST", body: fd });
+      } catch {
+        throw new Error(PUBLICIDAD_UPLOAD_FALLBACK_ERROR);
+      }
+
+      const data = await readPublicidadUploadJson<{
         ok?: boolean;
         asset?: AdAsset;
         error?: string;
-      };
+      }>(res);
       if (!res.ok || !data.ok || !data.asset) {
         throw new Error(data.error ?? `Error ${res.status}`);
       }
