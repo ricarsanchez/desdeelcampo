@@ -279,14 +279,22 @@ function SponsorAdCard({
   const mediaClassName =
     variant === "main"
       ? "aspect-[2/1] w-full overflow-hidden bg-stone-100 sm:aspect-[4/1]"
-      : "aspect-[4/3] w-full overflow-hidden bg-stone-100";
+      : "h-56 w-full overflow-hidden bg-white";
+  const videoClassName =
+    variant === "main"
+      ? "h-full w-full bg-black object-cover"
+      : "h-full w-full bg-black object-contain";
+  const imageClassName =
+    variant === "main"
+      ? "h-full w-full object-cover"
+      : "h-full w-full object-contain p-2";
 
   const media = (
     <div className={mediaClassName}>
       {isVideo ? (
         <video
           src={banner.fileUrl}
-          className="h-full w-full bg-black object-cover"
+          className={videoClassName}
           controls
           muted
           playsInline
@@ -297,7 +305,7 @@ function SponsorAdCard({
         <img
           src={banner.fileUrl}
           alt={banner.titulo ?? "Publicidad"}
-          className="h-full w-full object-cover"
+          className={imageClassName}
         />
       )}
     </div>
@@ -340,10 +348,12 @@ function SponsorsWidget({
   banners,
   showHeading,
   position,
+  sponsorContactUrl,
 }: {
   banners: AdAsset[];
   showHeading: boolean;
   position: "top" | "middle" | "bottom";
+  sponsorContactUrl: string;
 }) {
   const positionClassName =
     position === "middle" ? "lg:my-auto" : position === "bottom" ? "lg:mt-auto" : "";
@@ -365,7 +375,9 @@ function SponsorsWidget({
       </div>
       {showHeading && (
         <a
-          href="#"
+          href={sponsorContactUrl}
+          target={sponsorContactUrl.startsWith("https://") ? "_blank" : undefined}
+          rel={sponsorContactUrl.startsWith("https://") ? "noopener noreferrer" : undefined}
           className="mt-4 block text-center text-xs font-semibold text-[#14532D] hover:underline"
         >
           → Ser auspiciante
@@ -420,7 +432,13 @@ export default async function HomePage() {
   }));
   const siteName = store.siteName || "Desde el Campo 2026";
   const lotes = store.lotes.length > 0 ? store.lotes : defaultLotes;
-  const whatsappNumber = siteConfig?.whatsappNumber || "5493492000000";
+  const configuredWhatsappNumber = siteConfig?.whatsappNumber?.replace(/\D/g, "") ?? "";
+  const whatsappNumber = configuredWhatsappNumber || "5493492000000";
+  const sponsorContactUrl = configuredWhatsappNumber
+    ? `https://wa.me/${configuredWhatsappNumber}?text=${encodeURIComponent(
+        "Hola, quiero consultar por publicidad en Desde el Campo.",
+      )}`
+    : "#contacto";
   const quienesSomosTitle = siteConfig?.quienesSomosTitle || "";
   const quienesSomosContent = siteConfig?.quienesSomosContent || "";
   const sortedNews = [...noticias].sort((a, b) => b.date.localeCompare(a.date));
@@ -510,6 +528,7 @@ export default async function HomePage() {
                     banners={zone.banners}
                     showHeading={index === 0}
                     position={zone.id}
+                    sponsorContactUrl={sponsorContactUrl}
                   />
                 ))}
               </div>
