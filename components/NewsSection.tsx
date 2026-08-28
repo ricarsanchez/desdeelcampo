@@ -2,7 +2,7 @@ import type { NewsArticle } from "../lib/news";
 
 export function NewsSection({ news }: { news: NewsArticle[] }) {
   return (
-    <section className="mt-14 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+    <section id="ultimas-noticias" className="mt-14 scroll-mt-24 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
         <div>
           <p className="text-sm font-semibold uppercase text-emerald-700 tracking-[0.2em]">Noticias</p>

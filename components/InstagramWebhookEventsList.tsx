@@ -126,7 +126,7 @@ export default function InstagramWebhookEventsList() {
             href={INSTAGRAM_PROFILE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 via-pink-500 to-orange-400 px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
           >
             <Camera className="h-4 w-4" />
             Ver mas en Instagram
