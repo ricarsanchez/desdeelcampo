@@ -7,6 +7,7 @@ import {
   Info,
 } from "lucide-react";
 import InstagramWebhookEventsList from "../components/InstagramWebhookEventsList";
+import { SiteHeader } from "../components/SiteHeader";
 import { fetchDollarRates, getSelectedDollarRates } from "./api/_utils/marketPrices";
 import { readStoreData, type Lote, type AdAsset } from "./api/_utils/store";
 import { readSiteConfig } from "./api/_utils/siteConfig";
@@ -75,67 +76,6 @@ const defaultLotes: Lote[] = [
       "https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=600&q=80",
   },
 ];
-
-// ─────────────────────────────────────────────────────────────
-// Header
-// ─────────────────────────────────────────────────────────────
-const defaultLogoUrl = "/logo.png";
-
-function Header({ siteName, whatsappNumber }: { siteName: string; whatsappNumber: string }) {
-  const phone = whatsappNumber || "5493492000000";
-  const whatsappUrl =
-    `https://wa.me/${phone}?text=Hola!%20Me%20comunico%20desde%20${encodeURIComponent(
-      siteName,
-    )}.`;
-
-  return (
-    <header className="sticky top-0 z-50 bg-[#FDFBF7] border-b border-stone-200 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-        {/* Logo */}
-        <a href="#" className="shrink-0 group">
-          <div className="w-[280px] max-w-[62vw] overflow-hidden group-hover:scale-105 transition-transform">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={defaultLogoUrl}
-              alt="Logo del sitio"
-              className="w-full h-auto object-contain max-h-[130px]"
-            />
-          </div>
-        </a>
-
-        {/* Nav */}
-        <nav className="hidden md:flex items-center gap-1">
-          {[
-            { label: "Inicio", href: "#" },
-            { label: "Quienes Somos", href: "#quienes-somos" },
-            { label: "Remates", href: "#" },
-            { label: "Contacto", href: "#" },
-          ].map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-stone-600 hover:text-green-800 hover:bg-green-50 transition-all"
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
-
-        {/* WhatsApp CTA */}
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          id="whatsapp-header-cta"
-          className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#14532D] text-white text-sm font-semibold shadow-md hover:opacity-90 active:scale-95 transition-all shrink-0"
-        >
-          <MessageCircle className="w-4 h-4" />
-          <span className="hidden sm:inline">WhatsApp</span>
-        </a>
-      </div>
-    </header>
-  );
-}
 
 // ─────────────────────────────────────────────────────────────
 // Market Ticker
@@ -252,7 +192,7 @@ function LotCard({ lot, defaultWhatsappNumber }: { lot: Lote; defaultWhatsappNum
             target="_blank"
             rel="noopener noreferrer"
             id={`lot-whatsapp-${lot.id}`}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#14532D] text-white text-sm font-semibold hover:opacity-90 active:scale-95 transition-all shadow-sm"
+            className="flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#14532D] px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
           >
             <MessageCircle className="w-4 h-4" />
             Consultar por WhatsApp
@@ -378,7 +318,7 @@ function SponsorsWidget({
           href={sponsorContactUrl}
           target={sponsorContactUrl.startsWith("https://") ? "_blank" : undefined}
           rel={sponsorContactUrl.startsWith("https://") ? "noopener noreferrer" : undefined}
-          className="mt-4 block text-center text-xs font-semibold text-[#14532D] hover:underline"
+          className="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-lg px-3 py-2 text-sm font-semibold text-[#14532D] hover:bg-green-50 hover:underline"
         >
           → Ser auspiciante
         </a>
@@ -471,20 +411,20 @@ export default async function HomePage() {
       : defaultTickerItems;
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7]">
-      <Header siteName={siteName} whatsappNumber={whatsappNumber} />
+    <div id="inicio" className="min-h-screen scroll-mt-24 bg-[#FDFBF7]">
+      <SiteHeader siteName={siteName} whatsappNumber={whatsappNumber} />
       <MarketTicker items={tickerItems} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
 
           {/* ── LEFT: Instagram ── */}
-          <section className="w-full lg:w-[360px] shrink-0 space-y-5">
+          <section id="instagram" className="w-full scroll-mt-24 space-y-5 lg:w-[360px] lg:shrink-0">
             <InstagramWebhookEventsList />
           </section>
 
           {/* ── CENTER: Marketplace (50%) ── */}
-          <section className="w-full lg:flex-1">
+          <section id="compra-venta" className="w-full scroll-mt-24 lg:flex-1">
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-7 rounded-full bg-[#14532D]" />
@@ -511,7 +451,7 @@ export default async function HomePage() {
               <a
                 href="#"
                 id="view-all-lots"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-[#14532D] text-[#14532D] font-semibold text-sm hover:bg-green-50 transition-colors"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl border-2 border-[#14532D] px-6 py-3 text-sm font-semibold text-[#14532D] transition-colors hover:bg-green-50"
               >
                 Ver todos los lotes disponibles →
               </a>
@@ -543,8 +483,8 @@ export default async function HomePage() {
         <QuienesSomosSection title={quienesSomosTitle} content={quienesSomosContent} />
       )}
 
-      <footer className="mt-16 bg-[#1c1917] text-center py-6">
-        <p className="text-stone-400 text-sm">
+      <footer id="contacto" className="mt-16 bg-[#1c1917] px-4 py-6 text-center">
+        <p className="text-sm leading-relaxed text-stone-400">
           © 2026 Desde el Campo · San Cristóbal, Santa Fe · Todos los derechos reservados
         </p>
       </footer>
