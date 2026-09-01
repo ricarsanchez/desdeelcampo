@@ -425,12 +425,18 @@ export default async function HomePage() {
         <div className="flex flex-col lg:flex-row gap-8">
 
           {/* ── LEFT: Instagram ── */}
-          <section id="instagram" className="w-full scroll-mt-24 space-y-5 lg:w-[360px] lg:shrink-0">
+          <section
+            id="instagram"
+            className="order-3 w-full scroll-mt-24 space-y-5 lg:order-none lg:w-[360px] lg:shrink-0"
+          >
             <InstagramWebhookEventsList />
           </section>
 
           {/* ── CENTER: Marketplace (50%) ── */}
-          <section id="compra-venta" className="w-full scroll-mt-24 lg:flex-1">
+          <section
+            id="compra-venta"
+            className="order-1 w-full scroll-mt-24 lg:order-none lg:flex-1"
+          >
             <div className="flex items-center justify-between mb-5">
               <div className="flex items-center gap-2">
                 <div className="w-1 h-7 rounded-full bg-[#14532D]" />
@@ -466,23 +472,44 @@ export default async function HomePage() {
 
           {/* ── RIGHT: Sidebar (25%) ── */}
           {visibleSidebarZones.length > 0 && (
-            <aside className="flex w-full shrink-0 self-stretch lg:w-1/4">
-              <div className="flex w-full flex-1 flex-col gap-8">
-                {visibleSidebarZones.map((zone, index) => (
-                  <SponsorsWidget
-                    key={zone.id}
-                    banners={zone.banners}
-                    showHeading={index === 0}
-                    position={zone.id}
-                    sponsorContactUrl={sponsorContactUrl}
-                  />
-                ))}
+            <aside className="contents lg:flex lg:w-1/4 lg:shrink-0 lg:self-stretch">
+              <div className="contents lg:flex lg:w-full lg:flex-1 lg:flex-col lg:gap-8">
+                {visibleSidebarZones.map((zone, index) => {
+                  const mobileOrderClass =
+                    zone.id === "top"
+                      ? "order-2"
+                      : zone.id === "middle"
+                        ? "order-4"
+                        : "order-5";
+                  const desktopPositionClass =
+                    zone.id === "middle"
+                      ? "lg:my-auto"
+                      : zone.id === "bottom"
+                        ? "lg:mt-auto"
+                        : "";
+
+                  return (
+                    <div
+                      key={zone.id}
+                      className={`${mobileOrderClass} w-full lg:order-none ${desktopPositionClass}`}
+                    >
+                      <SponsorsWidget
+                        banners={zone.banners}
+                        showHeading={index === 0}
+                        position={zone.id}
+                        sponsorContactUrl={sponsorContactUrl}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             </aside>
           )}
         </div>
 
-        <NewsSection news={sortedNews} />
+        <div className={sortedNews.length > 0 ? "" : "hidden lg:block"}>
+          <NewsSection news={sortedNews} />
+        </div>
       </main>
 
       {quienesSomosContent && (
