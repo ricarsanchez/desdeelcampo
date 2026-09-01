@@ -7,6 +7,7 @@ import {
   Info,
 } from "lucide-react";
 import InstagramWebhookEventsList from "../components/InstagramWebhookEventsList";
+import { MobileBottomNav } from "../components/MobileBottomNav";
 import { SiteHeader } from "../components/SiteHeader";
 import { fetchDollarRates, getSelectedDollarRates } from "./api/_utils/marketPrices";
 import { readStoreData, type Lote, type AdAsset } from "./api/_utils/store";
@@ -83,7 +84,7 @@ const defaultLotes: Lote[] = [
 function MarketTicker({ items }: { items: string[] }) {
   const doubled = [...items, ...items];
   return (
-    <div className="w-full bg-[#451A03] overflow-hidden py-2.5">
+    <div id="precios-hoy" className="w-full scroll-mt-24 overflow-hidden bg-[#451A03] py-2.5">
       <div className="flex items-center gap-3">
         <div className="shrink-0 flex items-center gap-2 pl-4 pr-2">
           <TrendingUp className="w-4 h-4 text-amber-400 shrink-0" />
@@ -379,6 +380,11 @@ export default async function HomePage() {
         "Hola, quiero consultar por publicidad en Desde el Campo.",
       )}`
     : "#contacto";
+  const mobileContactUrl = configuredWhatsappNumber
+    ? `https://wa.me/${configuredWhatsappNumber}?text=${encodeURIComponent(
+        "Hola, me comunico desde Desde el Campo.",
+      )}`
+    : "#contacto";
   const quienesSomosTitle = siteConfig?.quienesSomosTitle || "";
   const quienesSomosContent = siteConfig?.quienesSomosContent || "";
   const sortedNews = [...noticias].sort((a, b) => b.date.localeCompare(a.date));
@@ -488,6 +494,7 @@ export default async function HomePage() {
           © 2026 Desde el Campo · San Cristóbal, Santa Fe · Todos los derechos reservados
         </p>
       </footer>
+      <MobileBottomNav contactUrl={mobileContactUrl} />
     </div>
   );
 }
