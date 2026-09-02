@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { isAuthorizedCronRequest, requireAdminRequest } from "@/lib/auth";
 import { getSupabaseServer } from "../../_utils/supabaseServer";
 
 export const runtime = "nodejs";
@@ -146,4 +147,20 @@ async function runSync() {
   }
 }
 
-export { runSync as GET, runSync as POST };
+export async function GET(request: NextRequest) {
+  if (!isAuthorizedCronRequest(request)) {
+    return NextResponse.json(
+      { ok: false, error: "No autorizado" },
+      { status: 401 },
+    );
+  }
+
+  return runSync();
+}
+
+export async function POST(request: NextRequest) {
+  const unauthorized = requireAdminRequest(request);
+  if (unauthorized) return unauthorized;
+
+  return runSync();
+}

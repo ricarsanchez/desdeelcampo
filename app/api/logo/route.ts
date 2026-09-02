@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { requireAdminRequest } from "@/lib/auth";
 import { saveFormDataFileToPublicUploads } from "../_utils/upload";
 import { readStoreData, writeStoreData } from "../_utils/store";
 
@@ -14,8 +15,11 @@ export async function GET() {
   return NextResponse.json({ ok: true, logo: store.logo, siteName: store.siteName });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const unauthorized = requireAdminRequest(request);
+    if (unauthorized) return unauthorized;
+
     const formData = await request.formData();
     const file = formData.get("file");
     const siteName = str(formData, "siteName").trim();
@@ -68,4 +72,3 @@ export async function POST(request: Request) {
     );
   }
 }
-

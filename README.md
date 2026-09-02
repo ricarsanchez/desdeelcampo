@@ -49,6 +49,8 @@ Plataforma web para la gestión integral de un emprendimiento ganadero. Permite 
 | `SUPABASE_URL` | URL del proyecto en Supabase |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service Role Key de Supabase |
 | `ADMIN_PASSWORD` | Contraseña para acceder al panel administrativo |
+| `ADMIN_SESSION_SECRET` | Secreto aleatorio de al menos 32 caracteres para firmar la sesión administrativa |
+| `CRON_SECRET` | Secreto de al menos 16 caracteres que Vercel envía al cron como `Authorization: Bearer ...` |
 | `OPENWEATHERMAP_API_KEY` | API Key para el widget del clima (opcional, tiene fallback) |
 
 ---

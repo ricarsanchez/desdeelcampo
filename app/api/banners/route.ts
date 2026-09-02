@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { ADMIN_COOKIE_NAME, isAdminCookie } from "@/lib/auth";
+import { requireAdminRequest } from "@/lib/auth";
 import { createId, type AdAsset } from "../_utils/store";
 import { deletePublicidadFile, savePublicidadFile } from "../_utils/publicidadStorage";
 import {
@@ -61,16 +61,6 @@ function detectAdType(contentType: string): { type: AdType; esVideo: boolean } {
   };
 }
 
-function requireAdmin(request: NextRequest) {
-  const value = request.cookies.get(ADMIN_COOKIE_NAME)?.value;
-  if (isAdminCookie(value)) return null;
-
-  return NextResponse.json(
-    { ok: false, error: "No autorizado." },
-    { status: 401 },
-  );
-}
-
 export async function GET() {
   const banners = await readPublicidad();
   return NextResponse.json({ ok: true, banners });
@@ -78,7 +68,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const unauthorized = requireAdmin(request);
+    const unauthorized = requireAdminRequest(request);
     if (unauthorized) return unauthorized;
 
     const formData = await request.formData();
@@ -165,7 +155,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const unauthorized = requireAdmin(request);
+    const unauthorized = requireAdminRequest(request);
     if (unauthorized) return unauthorized;
 
     const url = new URL(request.url);
@@ -230,7 +220,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const unauthorized = requireAdmin(request);
+    const unauthorized = requireAdminRequest(request);
     if (unauthorized) return unauthorized;
 
     const url = new URL(request.url);

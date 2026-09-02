@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { requireAdminRequest } from "@/lib/auth";
 import { saveFormDataFileToPublicUploads } from "../_utils/upload";
 import { readNewsArticles, addNewsArticle, updateNewsArticle, deleteNewsArticle } from "../../../lib/news";
 
@@ -14,8 +15,11 @@ export async function GET() {
   return NextResponse.json({ ok: true, noticias });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const unauthorized = requireAdminRequest(request);
+    if (unauthorized) return unauthorized;
+
     const formData = await request.formData();
     const title = str(formData, "title").trim();
     const content = str(formData, "content").trim();
@@ -45,8 +49,11 @@ export async function POST(request: Request) {
   }
 }
 
-export async function PUT(request: Request) {
+export async function PUT(request: NextRequest) {
   try {
+    const unauthorized = requireAdminRequest(request);
+    if (unauthorized) return unauthorized;
+
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     if (!id) {
@@ -82,8 +89,11 @@ export async function PUT(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    const unauthorized = requireAdminRequest(request);
+    if (unauthorized) return unauthorized;
+
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     if (!id) {

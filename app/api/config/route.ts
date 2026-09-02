@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { requireAdminRequest } from "@/lib/auth";
 import { readStoreData, writeStoreData, type SiteConfig } from "../_utils/store";
 import { getSupabaseServer } from "../_utils/supabaseServer";
 import { readSiteConfig, configToRow } from "../_utils/siteConfig";
@@ -10,8 +11,11 @@ export async function GET() {
   return NextResponse.json({ ok: true, config });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const unauthorized = requireAdminRequest(request);
+    if (unauthorized) return unauthorized;
+
     const body = (await request.json()) as Partial<SiteConfig>;
 
     if (!body || typeof body !== "object") {
