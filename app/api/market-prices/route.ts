@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { requireAdminRequest } from "@/lib/auth";
 import {
   fetchDollarRates,
   getSelectedDollarRates,
@@ -34,8 +35,11 @@ export async function GET() {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const unauthorized = requireAdminRequest(request);
+    if (unauthorized) return unauthorized;
+
     const body = await request.json();
     const { selectedTypes } = body as {
       selectedTypes?: string[];

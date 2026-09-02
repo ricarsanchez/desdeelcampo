@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { requireAdminRequest } from "@/lib/auth";
 import { unlink } from "node:fs/promises";
 import path from "node:path";
 import { saveFormDataFileToPublicUploads, uploadsDirAbsolute } from "../_utils/upload";
@@ -22,8 +23,11 @@ export async function GET() {
   return NextResponse.json({ ok: true, lotes: store.lotes });
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const unauthorized = requireAdminRequest(request);
+    if (unauthorized) return unauthorized;
+
     const formData = await request.formData();
 
     const titulo = str(formData, "titulo").trim();
@@ -88,8 +92,11 @@ export async function POST(request: Request) {
   }
 }
 
-export async function DELETE(request: Request) {
+export async function DELETE(request: NextRequest) {
   try {
+    const unauthorized = requireAdminRequest(request);
+    if (unauthorized) return unauthorized;
+
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
     if (!id) {
@@ -121,4 +128,3 @@ export async function DELETE(request: Request) {
     );
   }
 }
-
