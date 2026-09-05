@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import {
-  isInstagramWebhookSignatureRequired,
   normalizeInstagramWebhookRecords,
   verifyInstagramWebhookSignature,
 } from "../../_utils/instagramWebhook";
@@ -8,22 +7,24 @@ import { getSupabaseServer } from "../../_utils/supabaseServer";
 
 export const runtime = "nodejs";
 
-const DEFAULT_VERIFY_TOKEN = "desdeelcampo2026";
-
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const mode = searchParams.get("hub.mode");
-  const verifyToken =
-    searchParams.get("hub.verify_token") ||
-    searchParams.get("hub.verify-token") ||
-    searchParams.get("verify_token");
-  const challenge = searchParams.get("hub.challenge") || searchParams.get("challenge");
+  const verifyToken = searchParams.get("hub.verify_token");
+  const challenge = searchParams.get("hub.challenge");
 
-  if (!mode || !verifyToken || !challenge) {
+  const expectedToken = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN?.trim();
+  if (!expectedToken) {
+    return NextResponse.json(
+      { ok: false, error: "Webhook de Instagram no configurado." },
+      { status: 503 },
+    );
+  }
+
+  if (mode !== "subscribe" || !verifyToken || !challenge) {
     return NextResponse.json({ ok: false, error: "Solicitud de verificación inválida." }, { status: 400 });
   }
 
-  const expectedToken = process.env.INSTAGRAM_WEBHOOK_VERIFY_TOKEN || DEFAULT_VERIFY_TOKEN;
   if (verifyToken !== expectedToken) {
     return NextResponse.json({ ok: false, error: "Token de verificación inválido." }, { status: 403 });
   }
@@ -33,10 +34,21 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const rawBody = await request.text();
-    const signature = request.headers.get("x-hub-signature-256");
+    const appSecret = process.env.INSTAGRAM_APP_SECRET?.trim();
+    if (!appSecret) {
+      return NextResponse.json(
+        { ok: false, error: "Webhook de Instagram no configurado." },
+        { status: 503 },
+      );
+    }
 
-    if (isInstagramWebhookSignatureRequired() && !verifyInstagramWebhookSignature(rawBody, signature)) {
+    const signature = request.headers.get("x-hub-signature-256");
+    if (!signature) {
+      return NextResponse.json({ ok: false, error: "No autorizado" }, { status: 401 });
+    }
+
+    const rawBody = await request.text();
+    if (!verifyInstagramWebhookSignature(rawBody, signature, appSecret)) {
       return NextResponse.json({ ok: false, error: "Firma inválida." }, { status: 403 });
     }
 

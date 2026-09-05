@@ -97,13 +97,9 @@ export function normalizeInstagramWebhookRecords(body: WebhookBody): InstagramWe
 export function verifyInstagramWebhookSignature(
   rawBody: string,
   signatureHeader: string | null,
+  appSecret: string,
 ): boolean {
-  const appSecret = process.env.INSTAGRAM_APP_SECRET;
-  if (!appSecret) {
-    return true;
-  }
-
-  if (!signatureHeader?.startsWith("sha256=")) {
+  if (!appSecret || !signatureHeader?.startsWith("sha256=")) {
     return false;
   }
 
@@ -115,8 +111,4 @@ export function verifyInstagramWebhookSignature(
   } catch {
     return false;
   }
-}
-
-export function isInstagramWebhookSignatureRequired(): boolean {
-  return Boolean(process.env.INSTAGRAM_APP_SECRET);
 }

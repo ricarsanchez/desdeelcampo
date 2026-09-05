@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
+import { requireAdminRequest } from "@/lib/auth";
 import { getSupabaseServer } from "../../_utils/supabaseServer";
 
 export const runtime = "nodejs";
@@ -38,7 +39,10 @@ async function getTokenExpiration(token: string): Promise<number | null> {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const unauthorized = requireAdminRequest(request);
+  if (unauthorized) return unauthorized;
+
   const token = process.env.INSTAGRAM_ACCESS_TOKEN;
   const businessAccountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
   const connected = Boolean(token && businessAccountId);
