@@ -4,6 +4,18 @@ const LATITUDE = -31.6333;
 const LONGITUDE = -61.4667;
 const BASE_URL = "https://api.openweathermap.org/data/3.0/onecall";
 
+type OpenWeatherDailyForecast = {
+  dt: number;
+  temp?: {
+    min?: number;
+    max?: number;
+  };
+  weather?: Array<{
+    main?: string;
+    description?: string;
+  }>;
+};
+
 const fallbackWeather = {
   current: {
     temp: 24,
@@ -63,7 +75,7 @@ export async function GET() {
 
   const forecast = (data.daily ?? [])
     .slice(1, 5)
-    .map((day: any) =>
+    .map((day: OpenWeatherDailyForecast) =>
       formatForecastDay(
         new Date(day.dt * 1000).toISOString(),
         day.temp?.min ?? 0,
