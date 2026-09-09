@@ -1,9 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { requireAdminRequest } from "@/lib/auth";
-import {
-  fetchDollarRates,
-  getSelectedDollarRates,
-} from "../_utils/marketPrices";
+import { fetchDollarRates } from "../_utils/marketPrices";
 import {
   DEFAULT_DOLLAR_DISPLAY_TYPES,
   readStoreData,

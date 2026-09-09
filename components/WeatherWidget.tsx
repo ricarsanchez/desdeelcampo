@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Droplets, Sun, Wind } from "lucide-react";
+import { Droplets, Sun } from "lucide-react";
 
 type ForecastDay = {
   day: string;

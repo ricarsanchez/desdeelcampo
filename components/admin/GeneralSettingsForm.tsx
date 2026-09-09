@@ -21,7 +21,6 @@ export function GeneralSettingsForm({
   logoFile,
   setLogoFile,
   logoPreviewUrl,
-  logoSavedUrl,
   generalApiError,
   generalCanSave,
   isSavingGeneral,
