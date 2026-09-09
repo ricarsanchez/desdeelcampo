@@ -87,6 +87,7 @@ async function fetchInstagramWebhookEvents(
 }
 
 export function useInstagramWebhookEvents(options: UseInstagramWebhookEventsOptions = {}): UseInstagramWebhookEventsResult {
+  const { limit, offset } = options;
   const [events, setEvents] = useState<InstagramWebhookEvent[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -96,7 +97,7 @@ export function useInstagramWebhookEvents(options: UseInstagramWebhookEventsOpti
     setIsLoading(true);
     setError(null);
     try {
-      const payload = await fetchInstagramWebhookEvents(options);
+      const payload = await fetchInstagramWebhookEvents({ limit, offset });
       setEvents(payload.events);
       setTotal(payload.total);
     } catch (err) {
@@ -104,7 +105,7 @@ export function useInstagramWebhookEvents(options: UseInstagramWebhookEventsOpti
     } finally {
       setIsLoading(false);
     }
-  }, [options.limit, options.offset]);
+  }, [limit, offset]);
 
   useEffect(() => {
     void refetch();

@@ -39,7 +39,6 @@ type LotesFormProps = {
 export function LotesForm({
   loteDraft,
   setLoteDraft,
-  loteImageFile,
   setLoteImageFile,
   loteImagePreviewUrl,
   loteErrors,

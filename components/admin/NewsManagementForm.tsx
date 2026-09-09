@@ -30,7 +30,6 @@ export function NewsManagementForm({
   news,
   newsDraft,
   setNewsDraft,
-  newsImageFile,
   setNewsImageFile,
   newsImagePreviewUrl,
   newsErrors,

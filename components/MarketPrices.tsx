@@ -1,3 +1,4 @@
+import type { FC } from "react";
 import type { DollarRate } from "../app/api/_utils/marketPrices";
 
 type MarketPricesProps = {
@@ -5,16 +6,7 @@ type MarketPricesProps = {
   updatedAt: string;
 };
 
-function formatPrice(value: number | null) {
-  if (value === null) {
-    return "No disponible";
-  }
-
-  return `$${value.toLocaleString("es-AR", { maximumFractionDigits: 2 })}`;
-}
-
-export default function MarketPrices({ rates, updatedAt }: MarketPricesProps) {
-
+const MarketPrices: FC<MarketPricesProps> = () => {
   return (
     <section className="bg-white rounded-3xl border border-stone-100 shadow-sm p-5">
       <div className="flex items-center justify-between mb-4">
@@ -30,4 +22,6 @@ export default function MarketPrices({ rates, updatedAt }: MarketPricesProps) {
       </div>
     </section>
   );
-}
+};
+
+export default MarketPrices;
