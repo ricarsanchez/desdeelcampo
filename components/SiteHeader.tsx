@@ -2,6 +2,7 @@
 
 import { Menu, MessageCircle, X } from "lucide-react";
 import { useState } from "react";
+import { buildWhatsAppUrl } from "../lib/whatsapp";
 
 const DEFAULT_LOGO_URL = "/logo.png";
 
@@ -16,15 +17,15 @@ const NAV_LINKS = [
 export function SiteHeader({
   siteName,
   whatsappNumber,
+  whatsappMessage,
 }: {
   siteName: string;
   whatsappNumber: string;
+  whatsappMessage: string;
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const phone = whatsappNumber || "5493492000000";
-  const whatsappUrl = `https://wa.me/${phone}?text=Hola!%20Me%20comunico%20desde%20${encodeURIComponent(
-    siteName,
-  )}.`;
+  const whatsappUrl = buildWhatsAppUrl(phone, whatsappMessage);
 
   return (
     <header className="sticky top-0 z-50 border-b border-stone-200 bg-[#FDFBF7] shadow-sm">
@@ -34,7 +35,7 @@ export function SiteHeader({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={DEFAULT_LOGO_URL}
-              alt="Logo del sitio"
+              alt={`Logo de ${siteName}`}
               className="h-auto max-h-[130px] w-full object-contain"
             />
           </div>

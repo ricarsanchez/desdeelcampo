@@ -19,6 +19,7 @@ import {
   normalizePublicidadSlot,
   type PublicidadSlot,
 } from "../lib/publicidadSlots";
+import { buildWhatsAppUrl, getWhatsAppMessage } from "../lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
@@ -137,12 +138,18 @@ function QuienesSomosSection({ title, content }: { title: string; content: strin
 // ─────────────────────────────────────────────────────────────
 // Lot Card
 // ─────────────────────────────────────────────────────────────
-function LotCard({ lot, defaultWhatsappNumber }: { lot: Lote; defaultWhatsappNumber: string }) {
-  const whatsappText = encodeURIComponent(
-    `Hola! Estoy interesado en el lote: "${lot.titulo}" - ${lot.peso} kg - ${lot.localidad}`,
-  );
+function LotCard({
+  lot,
+  defaultWhatsappNumber,
+  whatsappMessage,
+}: {
+  lot: Lote;
+  defaultWhatsappNumber: string;
+  whatsappMessage: string;
+}) {
+  const lotMessage = `${getWhatsAppMessage(whatsappMessage)}\n\nEstoy interesado en el lote: "${lot.titulo}" - ${lot.peso} kg - ${lot.localidad}`;
   const phoneNumber = lot.telefono?.replace(/\D/g, "") || defaultWhatsappNumber || "5493492000000";
-  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${whatsappText}`;
+  const whatsappUrl = buildWhatsAppUrl(phoneNumber, lotMessage);
 
   return (
     <article className="card-hover bg-white rounded-2xl overflow-hidden border border-stone-100 shadow-sm flex flex-col">
@@ -341,16 +348,23 @@ function MainBannerZone({ banners }: { banners: AdAsset[] }) {
 function LotesGrid({
   lotes,
   whatsappNumber,
+  whatsappMessage,
   className = "",
 }: {
   lotes: Lote[];
   whatsappNumber: string;
+  whatsappMessage: string;
   className?: string;
 }) {
   return (
     <div className={`grid grid-cols-1 gap-5 sm:grid-cols-2 ${className}`}>
       {lotes.map((lot) => (
-        <LotCard key={lot.id} lot={lot} defaultWhatsappNumber={whatsappNumber} />
+        <LotCard
+          key={lot.id}
+          lot={lot}
+          defaultWhatsappNumber={whatsappNumber}
+          whatsappMessage={whatsappMessage}
+        />
       ))}
     </div>
   );
@@ -375,15 +389,12 @@ export default async function HomePage() {
   const lotes = store.lotes.length > 0 ? store.lotes : defaultLotes;
   const configuredWhatsappNumber = siteConfig?.whatsappNumber?.replace(/\D/g, "") ?? "";
   const whatsappNumber = configuredWhatsappNumber || "5493492000000";
+  const whatsappMessage = getWhatsAppMessage(siteConfig?.whatsappMessage);
   const sponsorContactUrl = configuredWhatsappNumber
-    ? `https://wa.me/${configuredWhatsappNumber}?text=${encodeURIComponent(
-        "Hola, quiero consultar por publicidad en Desde el Campo.",
-      )}`
+    ? buildWhatsAppUrl(configuredWhatsappNumber, whatsappMessage)
     : "#contacto";
   const mobileContactUrl = configuredWhatsappNumber
-    ? `https://wa.me/${configuredWhatsappNumber}?text=${encodeURIComponent(
-        "Hola, me comunico desde Desde el Campo.",
-      )}`
+    ? buildWhatsAppUrl(configuredWhatsappNumber, whatsappMessage)
     : "#contacto";
   const quienesSomosTitle = siteConfig?.quienesSomosTitle || "";
   const quienesSomosContent = siteConfig?.quienesSomosContent || "";
@@ -418,7 +429,11 @@ export default async function HomePage() {
 
   return (
     <div id="inicio" className="min-h-screen scroll-mt-24 bg-[#FDFBF7]">
-      <SiteHeader siteName={siteName} whatsappNumber={whatsappNumber} />
+      <SiteHeader
+        siteName={siteName}
+        whatsappNumber={whatsappNumber}
+        whatsappMessage={whatsappMessage}
+      />
       <MarketTicker items={tickerItems} />
 
       <main className="max-w-7xl mx-auto px-4 py-8">
@@ -450,14 +465,26 @@ export default async function HomePage() {
             </div>
             {mainBanners.length > 0 ? (
               <>
-                <LotesGrid lotes={firstRowLotes} whatsappNumber={whatsappNumber} />
+                <LotesGrid
+                  lotes={firstRowLotes}
+                  whatsappNumber={whatsappNumber}
+                  whatsappMessage={whatsappMessage}
+                />
                 <MainBannerZone banners={mainBanners} />
                 {remainingLotes.length > 0 && (
-                  <LotesGrid lotes={remainingLotes} whatsappNumber={whatsappNumber} />
+                  <LotesGrid
+                    lotes={remainingLotes}
+                    whatsappNumber={whatsappNumber}
+                    whatsappMessage={whatsappMessage}
+                  />
                 )}
               </>
             ) : (
-              <LotesGrid lotes={lotes} whatsappNumber={whatsappNumber} />
+              <LotesGrid
+                lotes={lotes}
+                whatsappNumber={whatsappNumber}
+                whatsappMessage={whatsappMessage}
+              />
             )}
             <div className="mt-6 text-center">
               <a

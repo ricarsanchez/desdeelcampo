@@ -43,6 +43,10 @@ export async function POST(request: NextRequest) {
       nextConfig.whatsappNumber = cleaned || undefined;
     }
 
+    if (typeof body.whatsappMessage === "string") {
+      nextConfig.whatsappMessage = body.whatsappMessage.trim() || undefined;
+    }
+
     if (typeof body.instagram === "string") {
       nextConfig.instagram = body.instagram.trim() || undefined;
     }

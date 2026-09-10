@@ -50,6 +50,7 @@ export type Lote = {
 
 export type SiteConfig = {
   whatsappNumber?: string;
+  whatsappMessage?: string;
   instagram?: string;
   facebook?: string;
   email?: string;

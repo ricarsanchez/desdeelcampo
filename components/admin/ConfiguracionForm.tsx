@@ -6,6 +6,9 @@ type ConfiguracionFormProps = {
   whatsappDraft: string;
   setWhatsappDraft: (value: string) => void;
   whatsappSaved: string;
+  whatsappMessageDraft: string;
+  setWhatsappMessageDraft: (value: string) => void;
+  whatsappMessageSaved: string;
   quienesSomosTitleDraft: string;
   setQuienesSomosTitleDraft: (value: string) => void;
   quienesSomosContentDraft: string;
@@ -35,6 +38,9 @@ export function ConfiguracionForm({
   whatsappDraft,
   setWhatsappDraft,
   whatsappSaved,
+  whatsappMessageDraft,
+  setWhatsappMessageDraft,
+  whatsappMessageSaved,
   quienesSomosTitleDraft,
   setQuienesSomosTitleDraft,
   quienesSomosContentDraft,
@@ -61,6 +67,7 @@ export function ConfiguracionForm({
 }: ConfiguracionFormProps) {
   const hasUnsavedChanges =
     whatsappDraft !== whatsappSaved ||
+    whatsappMessageDraft.trim() !== whatsappMessageSaved ||
     quienesSomosTitleDraft.trim() !== quienesSomosTitleSaved ||
     quienesSomosContentDraft.trim() !== quienesSomosContentSaved ||
     instagramDraft.trim() !== instagramSaved ||
@@ -135,6 +142,23 @@ export function ConfiguracionForm({
             />
             <p className="mt-1 text-xs text-slate-500">
               Formato internacional sin el signo +.
+            </p>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-semibold text-slate-800">
+              Mensaje predeterminado
+            </label>
+            <textarea
+              value={whatsappMessageDraft}
+              onChange={(e) => setWhatsappMessageDraft(e.target.value)}
+              rows={4}
+              className="mt-2 w-full resize-y rounded-xl border border-slate-200 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-200"
+              placeholder="Ej: Hola, me comunico desde Desde el Campo."
+              disabled={isSaving}
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Si queda vacío, se usará el mensaje predeterminado del sitio.
             </p>
           </div>
         </div>
