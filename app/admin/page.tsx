@@ -142,6 +142,8 @@ export default function AdminPage() {
 
   const [whatsappDraft, setWhatsappDraft] = useState("");
   const [whatsappSaved, setWhatsappSaved] = useState("");
+  const [whatsappMessageDraft, setWhatsappMessageDraft] = useState("");
+  const [whatsappMessageSaved, setWhatsappMessageSaved] = useState("");
   const [quienesSomosTitleDraft, setQuienesSomosTitleDraft] = useState("");
   const [quienesSomosContentDraft, setQuienesSomosContentDraft] = useState("");
   const [quienesSomosTitleSaved, setQuienesSomosTitleSaved] = useState("");
@@ -235,6 +237,9 @@ export default function AdminPage() {
         const savedNumber = configData.config?.whatsappNumber ?? "";
         setWhatsappDraft(savedNumber);
         setWhatsappSaved(savedNumber);
+        const savedWhatsappMessage = configData.config?.whatsappMessage ?? "";
+        setWhatsappMessageDraft(savedWhatsappMessage);
+        setWhatsappMessageSaved(savedWhatsappMessage);
         const savedTitle = configData.config?.quienesSomosTitle ?? "";
         const savedContent = configData.config?.quienesSomosContent ?? "";
         setQuienesSomosTitleDraft(savedTitle);
@@ -561,6 +566,7 @@ export default function AdminPage() {
 
       const cleaned = whatsappDraft.replace(/\D/g, "");
       body.whatsappNumber = cleaned || "";
+      body.whatsappMessage = whatsappMessageDraft.trim();
 
       body.quienesSomosTitle = quienesSomosTitleDraft.trim();
       body.quienesSomosContent = quienesSomosContentDraft.trim();
@@ -590,6 +596,7 @@ export default function AdminPage() {
 
   function onResetConfig() {
     setWhatsappDraft(whatsappSaved);
+    setWhatsappMessageDraft(whatsappMessageSaved);
     setQuienesSomosTitleDraft(quienesSomosTitleSaved);
     setQuienesSomosContentDraft(quienesSomosContentSaved);
     setInstagramDraft(instagramSaved);
@@ -603,6 +610,7 @@ export default function AdminPage() {
   function applySavedConfig(config: Record<string, unknown>) {
     const s: Record<string, string> = {
       whatsappNumber: String(config?.whatsappNumber ?? ""),
+      whatsappMessage: String(config?.whatsappMessage ?? ""),
       quienesSomosTitle: String(config?.quienesSomosTitle ?? ""),
       quienesSomosContent: String(config?.quienesSomosContent ?? ""),
       instagram: String(config?.instagram ?? ""),
@@ -612,6 +620,8 @@ export default function AdminPage() {
     };
     setWhatsappDraft(s.whatsappNumber);
     setWhatsappSaved(s.whatsappNumber);
+    setWhatsappMessageDraft(s.whatsappMessage);
+    setWhatsappMessageSaved(s.whatsappMessage);
     setQuienesSomosTitleDraft(s.quienesSomosTitle);
     setQuienesSomosContentDraft(s.quienesSomosContent);
     setQuienesSomosTitleSaved(s.quienesSomosTitle);
@@ -739,6 +749,9 @@ export default function AdminPage() {
                   whatsappDraft={whatsappDraft}
                   setWhatsappDraft={setWhatsappDraft}
                   whatsappSaved={whatsappSaved}
+                  whatsappMessageDraft={whatsappMessageDraft}
+                  setWhatsappMessageDraft={setWhatsappMessageDraft}
+                  whatsappMessageSaved={whatsappMessageSaved}
                   quienesSomosTitleDraft={quienesSomosTitleDraft}
                   setQuienesSomosTitleDraft={setQuienesSomosTitleDraft}
                   quienesSomosContentDraft={quienesSomosContentDraft}

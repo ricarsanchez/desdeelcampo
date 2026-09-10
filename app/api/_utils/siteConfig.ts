@@ -4,6 +4,7 @@ import { readStoreData, type SiteConfig } from "./store";
 type SiteConfigRow = {
   id: number;
   whatsapp_number: string | null;
+  whatsapp_message: string | null;
   instagram: string | null;
   facebook: string | null;
   email: string | null;
@@ -15,6 +16,7 @@ type SiteConfigRow = {
 export function rowToConfig(row: SiteConfigRow): SiteConfig {
   return {
     whatsappNumber: row.whatsapp_number ?? undefined,
+    whatsappMessage: row.whatsapp_message ?? undefined,
     instagram: row.instagram ?? undefined,
     facebook: row.facebook ?? undefined,
     email: row.email ?? undefined,
@@ -28,6 +30,7 @@ export function configToRow(config: SiteConfig): Record<string, unknown> {
   return {
     id: 1,
     whatsapp_number: config.whatsappNumber ?? null,
+    whatsapp_message: config.whatsappMessage ?? null,
     instagram: config.instagram ?? null,
     facebook: config.facebook ?? null,
     email: config.email ?? null,
