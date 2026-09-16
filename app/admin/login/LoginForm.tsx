@@ -2,6 +2,25 @@
 
 import { useState, type FormEvent, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { sanitizeRedirectTo } from "@/lib/safe-redirect";
+
+type LoginResponse = {
+  ok?: boolean;
+  error?: string;
+};
+
+async function readLoginResponse(response: Response): Promise<LoginResponse> {
+  const body = await response.text();
+  if (!body.trim()) {
+    throw new Error(`El servidor respondió sin contenido (HTTP ${response.status}).`);
+  }
+
+  try {
+    return JSON.parse(body) as LoginResponse;
+  } catch {
+    throw new Error(`El servidor devolvió una respuesta inválida (HTTP ${response.status}).`);
+  }
+}
 
 function LoginFormContent() {
   const router = useRouter();
@@ -10,7 +29,7 @@ function LoginFormContent() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const redirectTo = searchParams?.get("redirectTo") ?? "/admin";
+  const redirectTo = sanitizeRedirectTo(searchParams?.get("redirectTo"));
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -23,7 +42,7 @@ function LoginFormContent() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ password }),
       });
-      const data = await response.json();
+      const data = await readLoginResponse(response);
 
       if (!response.ok || !data.ok) {
         throw new Error(data.error ?? "No se pudo iniciar sesión.");
