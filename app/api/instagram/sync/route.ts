@@ -4,6 +4,8 @@ import { getSupabaseServer } from "../../_utils/supabaseServer";
 
 export const runtime = "nodejs";
 
+class InstagramSyncError extends Error {}
+
 type InstagramMediaItem = {
   id: string;
   caption?: string;
@@ -55,12 +57,10 @@ function mapMediaToRecords(items: InstagramMediaItem[]): InstagramWebhookRecord[
 }
 
 async function fetchInstagramMedia(): Promise<InstagramMediaItem[]> {
-  const token = process.env.INSTAGRAM_ACCESS_TOKEN;
-  const businessAccountId =
-    process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
+  const token = process.env.INSTAGRAM_ACCESS_TOKEN?.trim();
 
-  if (!token || !businessAccountId) {
-    return [];
+  if (!token) {
+    throw new InstagramSyncError("Instagram no configurado: falta INSTAGRAM_ACCESS_TOKEN.");
   }
 
   const fields = [
@@ -73,21 +73,32 @@ async function fetchInstagramMedia(): Promise<InstagramMediaItem[]> {
     "permalink",
   ].join(",");
 
-  const endpoint = `https://graph.facebook.com/v22.0/${encodeURIComponent(
-    businessAccountId,
-  )}/media?fields=${encodeURIComponent(fields)}&limit=50&access_token=${encodeURIComponent(token)}`;
+  // /me usa la cuenta autorizada por Instagram Login, sin mezclar IDs de Facebook.
+  const endpoint = `https://graph.instagram.com/v22.0/me/media?fields=${encodeURIComponent(fields)}&limit=50`;
 
-  const response = await fetch(endpoint, { cache: "no-store" });
+  const response = await fetch(endpoint, {
+    cache: "no-store",
+    headers: { Authorization: `Bearer ${token}` },
+  }).catch(() => {
+    throw new InstagramSyncError("No se pudo conectar con Instagram. Intentá nuevamente.");
+  });
   if (!response.ok) {
     console.error("Instagram sync: error fetching media.", {
       status: response.status,
       statusText: response.statusText,
     });
-    return [];
+    throw new InstagramSyncError(
+      response.status === 401 || response.status === 403
+        ? "Instagram rechazó el acceso. Revisá el token y sus permisos."
+        : "No se pudo consultar Instagram. Revisá el token, los permisos o intentá nuevamente.",
+    );
   }
 
   const payload = (await response.json()) as { data?: InstagramMediaItem[] };
-  return Array.isArray(payload.data) ? payload.data : [];
+  if (!Array.isArray(payload.data)) {
+    throw new InstagramSyncError("Instagram devolvió una respuesta inválida.");
+  }
+  return payload.data;
 }
 
 async function runSync() {
@@ -98,7 +109,7 @@ async function runSync() {
       return NextResponse.json({
         ok: true,
         upserted: 0,
-        note: "No se encontraron medios o faltan variables de entorno.",
+        note: "La cuenta no tiene publicaciones disponibles.",
       });
     }
 
@@ -141,7 +152,13 @@ async function runSync() {
       message: error instanceof Error ? error.message : String(error),
     });
     return NextResponse.json(
-      { ok: false, error: "No se pudo ejecutar la sincronización.", upserted: 0 },
+      {
+        ok: false,
+        error: error instanceof InstagramSyncError
+          ? error.message
+          : "No se pudo ejecutar la sincronización.",
+        upserted: 0,
+      },
       { status: 500 },
     );
   }
