@@ -14,28 +14,20 @@ type StatusResponse = {
   error?: string;
 };
 
-async function getTokenExpiration(token: string): Promise<number | null> {
+async function checkInstagramConnection(token: string): Promise<boolean> {
   try {
-    const endpoint = `https://graph.facebook.com/v22.0/debug_token?input_token=${encodeURIComponent(token)}&access_token=${encodeURIComponent(token)}`;
-    const response = await fetch(endpoint, { cache: "no-store" });
-    if (!response.ok) return null;
-    const payload = (await response.json()) as {
-      data?: {
-        expires_at?: number;
-        data_access_expires_at?: number;
-        is_valid?: boolean;
-      };
-    };
-    const data = payload.data;
-    let expiresAt = data?.expires_at;
-    if (!expiresAt || expiresAt === 0) {
-      expiresAt = data?.data_access_expires_at;
-    }
-    if (!expiresAt || expiresAt === 0) return null;
-    const now = Math.floor(Date.now() / 1000);
-    return Math.max(0, Math.ceil((expiresAt - now) / 86400));
+    const response = await fetch(
+      "https://graph.instagram.com/v22.0/me?fields=id",
+      {
+        cache: "no-store",
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    );
+    if (!response.ok) return false;
+    const payload = (await response.json()) as { id?: unknown };
+    return typeof payload.id === "string" && payload.id.length > 0;
   } catch {
-    return null;
+    return false;
   }
 }
 
@@ -43,9 +35,8 @@ export async function GET(request: NextRequest) {
   const unauthorized = requireAdminRequest(request);
   if (unauthorized) return unauthorized;
 
-  const token = process.env.INSTAGRAM_ACCESS_TOKEN;
-  const businessAccountId = process.env.INSTAGRAM_BUSINESS_ACCOUNT_ID;
-  const connected = Boolean(token && businessAccountId);
+  const token = process.env.INSTAGRAM_ACCESS_TOKEN?.trim();
+  const connected = token ? await checkInstagramConnection(token) : false;
 
   const result: StatusResponse = {
     ok: true,
@@ -90,9 +81,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (token) {
-      result.tokenDaysRemaining = await getTokenExpiration(token);
-    }
+    // Instagram Login no entrega la caducidad al consultar el perfil.
+    // Mantener null evita mostrar una vigencia estimada como si fuera verificada.
 
     return NextResponse.json(result);
   } catch (error) {
